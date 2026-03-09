@@ -3,6 +3,9 @@ package it.progetto.backend.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "clienti")
 @Data
@@ -24,4 +27,13 @@ public class Cliente {
     @Column(name = "punti_fedelta", nullable = false)
     @Builder.Default
     private Integer puntiFedelta = 0;
+
+    @ManyToMany
+    @JoinTable(
+            name = "film_preferiti",
+            joinColumns = @JoinColumn(name = "cliente_id"),
+            inverseJoinColumns = @JoinColumn(name = "film_id")
+    )
+    @Builder.Default
+    private Set<Film> filmPreferiti = new HashSet<>();
 }
