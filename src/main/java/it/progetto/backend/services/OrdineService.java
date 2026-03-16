@@ -62,7 +62,9 @@ public class OrdineService
 
             if (film.getStock() < rigaDto.getQuantita())
             {
-                throw new IllegalStateException("Copie insufficienti per '" + film.getTitolo() + "'. Ne hai chieste " + rigaDto.getQuantita() + " ma ne restano solo " + film.getStock());
+                throw new IllegalStateException("Copie insufficienti per '" + film.getTitolo()
+                        + "'. Ne hai chieste " + rigaDto.getQuantita()
+                        + " ma ne restano solo " + film.getStock());
             }
 
             RigaOrdine rigaReale = RigaOrdine.builder()
