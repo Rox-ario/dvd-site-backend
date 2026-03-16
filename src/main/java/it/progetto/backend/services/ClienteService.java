@@ -32,6 +32,7 @@ public class ClienteService
         dto.setCognome(cliente.getCognome());
         dto.setEmail(cliente.getEmail());
         dto.setPuntiFedeltà(cliente.getPuntiFedelta());
+        dto.setRuolo(cliente.getRuolo().name());
         if (cliente.getFilmPreferiti() != null && !cliente.getFilmPreferiti().isEmpty())
         {
             Set<String> titoliPreferiti = cliente.getFilmPreferiti().stream()

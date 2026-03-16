@@ -13,4 +13,5 @@ public class ClienteProfileResponseDTO
     private String email;
     private Integer puntiFedeltà;
     private Set<String> filmPreferiti;
+    private String ruolo;
 }
