@@ -21,21 +21,20 @@ public class AuthService {
     @Transactional
     public String registraCliente(RegistrazioneRequestDTO dto)
     {
-        if (clienteRepository.findByEmail(dto.getEmail()).isPresent()) {
+        if (clienteRepository.findByEmail(dto.getEmail()).isPresent())
+        {
             throw new IllegalArgumentException("Errore: Un utente con questa email è già registrato.");
         }
 
-        Cliente nuovoCliente = new Cliente();
-        nuovoCliente.setNome(dto.getNome());
-        nuovoCliente.setCognome(dto.getCognome());
-        nuovoCliente.setEmail(dto.getEmail());
-
-        String passwordCriptata = passwordEncoder.encode(dto.getPassword());
-        nuovoCliente.setPassword(passwordCriptata);
-
-        nuovoCliente.setPuntiFedelta(0);
-        nuovoCliente.setFilmPreferiti(new HashSet<>());
-        nuovoCliente.setRuolo(Ruolo.CLIENTE);
+        Cliente nuovoCliente = Cliente.builder()
+                        .nome(dto.getNome())
+                        .cognome(dto.getCognome())
+                        .email(dto.getEmail())
+                        .password(passwordEncoder.encode(dto.getPassword()))
+                        .puntiFedelta(0)
+                        .filmPreferiti(new HashSet<>())
+                        .ruolo(Ruolo.CLIENTE)
+                        .build();
 
         clienteRepository.save(nuovoCliente);
 
