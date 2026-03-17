@@ -21,13 +21,9 @@ public class Film
     @Column(nullable = false)
     private String titolo;
 
-    private String paese;
-
     private Integer anno;
 
     private Integer durataMinuti;
-
-    private String classificazioneEta;
 
     @Column(columnDefinition = "TEXT") //per inserire trame più lunghe
     private String trama;
