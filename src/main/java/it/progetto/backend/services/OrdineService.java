@@ -52,8 +52,9 @@ public class OrdineService
 
         for (RigaOrdineDTO rigaDto : richiesta.getArticoli())
         {
-            Film film = filmRepository.findById(rigaDto.getIdFilm())
-                    .orElseThrow(() -> new IllegalArgumentException("Film con ID " + rigaDto.getIdFilm() + " inesistente."));
+            Long idFilm = rigaDto.getIdFilm();
+            Film film = filmRepository.findById(idFilm)
+                    .orElseThrow(() -> new IllegalArgumentException("Film con ID " + idFilm + " inesistente."));
 
             if (!film.getIsAttivo())
             {
@@ -62,9 +63,7 @@ public class OrdineService
 
             if (film.getStock() < rigaDto.getQuantita())
             {
-                throw new IllegalStateException("Copie insufficienti per '" + film.getTitolo()
-                        + "'. Ne hai chieste " + rigaDto.getQuantita()
-                        + " ma ne restano solo " + film.getStock());
+                throw new IllegalStateException("Copie insufficienti per '" + film.getTitolo());
             }
 
             RigaOrdine rigaReale = RigaOrdine.builder()
@@ -91,25 +90,62 @@ public class OrdineService
     public List<OrdineResponseDTO> ottieniStoricoCliente(Long idCliente)
     {
         List<Ordine> ordiniReali = ordineRepository.findByClienteIdOrderByDataAcquistoDesc(idCliente);
-        return ordiniReali.stream().map(ordine -> {
-
-            OrdineResponseDTO dto = new OrdineResponseDTO();
-            dto.setNumeroOrdine(ordine.getId());
-            dto.setDataAcquisto(ordine.getDataAcquisto());
-            dto.setTotale(ordine.getTotale());
-            dto.setStato(ordine.getStato().name());
-
-            List<RigaOrdineResponseDTO> righeDto = ordine.getRighe().stream().map(riga -> {
-                RigaOrdineResponseDTO rigaDto = new RigaOrdineResponseDTO();
-                rigaDto.setTitoloFilm(riga.getFilm().getTitolo());
-                rigaDto.setQuantita(riga.getQuantita());
-                rigaDto.setPrezzoAcquisto(riga.getPrezzoAcquisto());
-                return rigaDto;
-            }).toList();
-
-            dto.setRighe(righeDto);
-
-            return dto;
-        }).toList();
+        return ordiniReali.stream().map(this::convertiInDTO).toList();
     }
+
+    public List<OrdineResponseDTO> ottieniTuttiGliOrdini(String stato)
+    {
+        List<Ordine> ordini;
+
+        if (stato != null && !stato.isBlank()) {
+            try {
+                // Tenta la conversione sicura della stringa nell'Enum
+                StatoOrdine statoEnum = StatoOrdine.valueOf(stato.toUpperCase());
+                ordini = ordineRepository.findByStato(statoEnum);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Stato ordine non valido: " + stato);
+            }
+        } else {
+            // Se non passo nessuno stato, li recupero tutti
+            ordini = ordineRepository.findAll();
+        }
+
+        return ordini.stream().map(this::convertiInDTO).toList();
+    }
+
+    public OrdineResponseDTO aggiornaStatoOrdine(Long idOrdine, String nuovoStato)
+    {
+        Ordine ordine = ordineRepository.findById(idOrdine)
+                .orElseThrow(() -> new IllegalArgumentException("Ordine con ID " + idOrdine + " non trovato."));
+
+        try {
+            StatoOrdine statoEnum = StatoOrdine.valueOf(nuovoStato.toUpperCase());
+            ordine.setStato(statoEnum);
+            Ordine ordineAggiornato = ordineRepository.save(ordine);
+            return convertiInDTO(ordineAggiornato);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Stato inesistente. Valori ammessi: IN_ELABORAZIONE, SPEDITO, CONSEGNATO, ANNULLATO");
+        }
+    }
+
+    private OrdineResponseDTO convertiInDTO(Ordine ordine) {
+        OrdineResponseDTO dto = new OrdineResponseDTO();
+        dto.setNumeroOrdine(ordine.getId());
+        dto.setDataAcquisto(ordine.getDataAcquisto());
+        dto.setTotale(ordine.getTotale());
+        dto.setStato(ordine.getStato().name());
+
+        List<RigaOrdineResponseDTO> righeDto = ordine.getRighe().stream().map(riga -> {
+            RigaOrdineResponseDTO rigaDto = new RigaOrdineResponseDTO();
+            rigaDto.setTitoloFilm(riga.getFilm().getTitolo());
+            rigaDto.setQuantita(riga.getQuantita());
+            rigaDto.setPrezzoAcquisto(riga.getPrezzoAcquisto());
+            return rigaDto;
+        }).toList();
+
+        dto.setRighe(righeDto);
+        return dto;
+    }
+
+
 }
