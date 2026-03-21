@@ -147,14 +147,17 @@ public class FilmService
         filmRepository.save(filmDaEliminare);
     }
 
-    private FilmResponseDTO convertiInDTO(Film film)
+    public FilmResponseDTO convertiInDTO(Film film) //public così lo utilizzo anche in altri service
     {
         FilmResponseDTO dto = new FilmResponseDTO();
+        dto.setIdFilm(film.getId());
         dto.setTitolo(film.getTitolo());
         dto.setTrama(film.getTrama());
         dto.setPrezzo(film.getPrezzo());
         dto.setAnno(film.getAnno());
         dto.setDurataMinuti(film.getDurataMinuti());
+        dto.setStock(film.getStock());
+        dto.setAttivo(film.getIsAttivo());
 
         Set<Genere> generi = film.getGeneri();
         if (generi != null)

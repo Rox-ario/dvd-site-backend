@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class FilmResponseDTO
 {
+    private Long idFilm;
     private String titolo;
     private String trama;
     private BigDecimal prezzo;
@@ -16,4 +17,6 @@ public class FilmResponseDTO
     private List<String> attori;
     private Integer anno;
     private Integer durataMinuti;
+    private Integer stock; //per quantità disponibile
+    private boolean isAttivo; // per dire al cliente se sia in vendita ancora o meno
 }

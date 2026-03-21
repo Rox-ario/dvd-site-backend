@@ -99,14 +99,14 @@ public class OrdineService
 
         if (stato != null && !stato.isBlank()) {
             try {
-                // Tenta la conversione sicura della stringa nell'Enum
+                //Tenta la conversione sicura della stringa nell'Enum
                 StatoOrdine statoEnum = StatoOrdine.valueOf(stato.toUpperCase());
                 ordini = ordineRepository.findByStato(statoEnum);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Stato ordine non valido: " + stato);
             }
         } else {
-            // Se non passo nessuno stato, li recupero tutti
+            //Se non passo nessuno stato, li recupero tutti
             ordini = ordineRepository.findAll();
         }
 
