@@ -56,6 +56,7 @@ public class FilmService
         nuovoFilm.setPrezzo(request.getPrezzo());
         nuovoFilm.setStock(request.getStock());
         nuovoFilm.setIsAttivo(true);
+        nuovoFilm.setUrlImmagine(request.getUrlImmagine());
 
         //GENERI
         nuovoFilm.setGeneri(request.getIdGeneri() != null ?
@@ -103,6 +104,7 @@ public class FilmService
         filmEsistente.setPrezzo(request.getPrezzo());
         filmEsistente.setStock(request.getStock());
         filmEsistente.setIsAttivo(true);
+        filmEsistente.setUrlImmagine(request.getUrlImmagine());
 
         //GENERI
         filmEsistente.setGeneri(request.getIdGeneri() != null ?
@@ -158,6 +160,7 @@ public class FilmService
         dto.setDurataMinuti(film.getDurataMinuti());
         dto.setStock(film.getStock());
         dto.setAttivo(film.getIsAttivo());
+        dto.setUrlImmagine(film.getUrlImmagine());
 
         Set<Genere> generi = film.getGeneri();
         if (generi != null)

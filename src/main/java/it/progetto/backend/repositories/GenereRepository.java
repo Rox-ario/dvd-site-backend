@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface GenereRepository extends JpaRepository<Genere, Long>
 {
-    Optional<Genere> findByNomeIgnoreCase(String nome);
-
-    List<Genere> nome(String nome);
+    boolean existsByNomeIgnoreCase(String nome);
+    // Ricerca solo per nome, essendo l'unico campo disponibile
+    List<Genere> findByNomeContainingIgnoreCase(String nome);
 }

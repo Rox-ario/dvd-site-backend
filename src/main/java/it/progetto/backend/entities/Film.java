@@ -64,4 +64,6 @@ public class Film
     )
     @Builder.Default
     private Set<Regista> registi = new HashSet<>();
+
+    private String urlImmagine;
 }
