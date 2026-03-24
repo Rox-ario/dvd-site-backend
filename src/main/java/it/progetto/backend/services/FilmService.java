@@ -12,6 +12,7 @@ import it.progetto.backend.repositories.GenereRepository;
 import it.progetto.backend.repositories.RegistaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -28,6 +29,8 @@ public class FilmService
     private final GenereRepository genereRepository;
     private final RegistaRepository registaRepository;
 
+    private static final String DEFAULT_COVER_URL = "https://via.placeholder.com/300x450.png?text=Copertina+Non+Disponibile";
+
     public List<FilmResponseDTO> ricercaAvanzata(String titolo, String nomeGenere, String nomeAttore, String nomeRegista)
     {
         List<Film> filmTrovati = filmRepository.ricercaAvanzataParametrica(titolo, nomeGenere, nomeAttore, nomeRegista);
@@ -41,6 +44,7 @@ public class FilmService
         return convertiInDTO(film);
     }
 
+    @Transactional
     public FilmResponseDTO creaFilm(CreaFilmRequestDTO request)
     {
         if (filmRepository.existsByTitoloIgnoreCase(request.getTitolo()))
@@ -57,6 +61,8 @@ public class FilmService
         nuovoFilm.setStock(request.getStock());
         nuovoFilm.setIsAttivo(true);
         nuovoFilm.setUrlImmagine(request.getUrlImmagine());
+
+        assegnaUrlImmagine(nuovoFilm, request.getUrlImmagine());
 
         //GENERI
         nuovoFilm.setGeneri(request.getIdGeneri() != null ?
@@ -88,10 +94,10 @@ public class FilmService
                         .collect(Collectors.toSet())
                 : new HashSet<>());
 
-        Film salvato = filmRepository.save(nuovoFilm);
-        return convertiInDTO(salvato);
+        return convertiInDTO(filmRepository.save(nuovoFilm));
     }
 
+    @Transactional
     public FilmResponseDTO aggiornaFilm(Long id, CreaFilmRequestDTO request)
     {
         Film filmEsistente = filmRepository.findById(id)
@@ -109,36 +115,35 @@ public class FilmService
         //GENERI
         filmEsistente.setGeneri(request.getIdGeneri() != null ?
                 request.getIdGeneri().stream()
-                        .map(ID -> genereRepository.findById(ID)
-                                /*se la scatola Optional<Attore> contiene il genere, lo estrae.
-                                se è vuota, blocca tutto e lancia un'eccezione chiara.*/
-                                .orElseThrow(() -> new RuntimeException("Impossibile creare il film: Genere con ID " + id + " non trovato!")))
+                        .map(idGenere -> genereRepository.findById(idGenere)
+                                .orElseThrow(() -> new RuntimeException("Impossibile aggiornare: Genere con ID " + idGenere + " non trovato!")))
                         .collect(Collectors.toSet())
                 : new HashSet<>());
 
         //ATTORI
         filmEsistente.setAttori(request.getIdAttori() != null ?
                 request.getIdAttori().stream()
-                        .map(ID -> attoreRepository.findById(ID)
+                        .map(idAttore -> attoreRepository.findById(idAttore)
                                 /*se la scatola Optional<Attore> contiene l'attore, lo estrae.
                                 se è vuota, blocca tutto e lancia un'eccezione chiara.*/
-                                .orElseThrow(() -> new RuntimeException("Impossibile creare il film: Attore con ID " + id + " non trovato!")))
+                                .orElseThrow(() -> new RuntimeException("Impossibile creare il film: Attore con ID " + idAttore + " non trovato!")))
                         .collect(Collectors.toSet())
                 : new HashSet<>());
 
         //Regista
         filmEsistente.setRegisti(request.getIdRegisti() != null ?
                 request.getIdRegisti().stream()
-                        .map(ID -> registaRepository.findById(ID)
+                        .map(idRegista -> registaRepository.findById(idRegista)
                                 /*se la scatola Optional<Regista> contiene il regista, lo estrae.
                                 se è vuota, blocca tutto e lancia un'eccezione chiara.*/
-                                .orElseThrow(() -> new RuntimeException("Impossibile creare il film: Regista con ID " + id + " non trovato!")))
+                                .orElseThrow(() -> new RuntimeException("Impossibile creare il film: Regista con ID " + idRegista + " non trovato!")))
                         .collect(Collectors.toSet())
                 : new HashSet<>());
 
         return convertiInDTO(filmRepository.save(filmEsistente));
     }
 
+    @Transactional
     public void eliminaFilm(Long id)
     {
         Film filmDaEliminare = filmRepository.findById(id)
@@ -181,6 +186,18 @@ public class FilmService
                     .collect(Collectors.toList()));
         }
         return dto;
+    }
+
+    private void assegnaUrlImmagine(Film film, String urlFornito)
+    {
+        if (urlFornito == null || urlFornito.trim().isEmpty())
+        {
+            film.setUrlImmagine(DEFAULT_COVER_URL);
+        }
+        else
+        {
+            film.setUrlImmagine(urlFornito.trim());
+        }
     }
 }
 

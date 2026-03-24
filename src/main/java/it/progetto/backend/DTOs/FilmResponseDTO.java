@@ -19,5 +19,5 @@ public class FilmResponseDTO
     private Integer durataMinuti;
     private Integer stock; //per quantità disponibile
     private boolean isAttivo; // per dire al cliente se sia in vendita ancora o meno
-    String urlImmagine;
+    private String urlImmagine;
 }
