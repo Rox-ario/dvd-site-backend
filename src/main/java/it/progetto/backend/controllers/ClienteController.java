@@ -3,6 +3,7 @@ package it.progetto.backend.controllers;
 import it.progetto.backend.DTOs.AggiornaAnagraficaRequestDTO;
 import it.progetto.backend.DTOs.ClienteProfileResponseDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
+import it.progetto.backend.security.JwtService;
 import it.progetto.backend.services.ClienteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,44 +17,55 @@ import java.util.List;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final JwtService jwtService;
 
-    @GetMapping("/{idCliente}/profilo")
-    public ClienteProfileResponseDTO visualizzaProfilo(@PathVariable Long idCliente)
+    private String ottieniEmailDaToken(String authHeader)
     {
-        return clienteService.ottieniProfilo(idCliente);
+        String token = authHeader.substring(7); // Rimuove "Bearer "
+        return jwtService.extractUsername(token);
     }
 
-    @PutMapping("/{idCliente}/profilo")
+    @GetMapping("/me/profilo")
+    public ClienteProfileResponseDTO visualizzaProfilo(
+            @RequestHeader("Authorization") String authHeader) {
+
+        String email = ottieniEmailDaToken(authHeader);
+        return clienteService.ottieniProfilo(email);
+    }
+
+    @PutMapping("/me/profilo")
     public ClienteProfileResponseDTO aggiornaProfilo(
-            @PathVariable Long idCliente,
-            @RequestBody AggiornaAnagraficaRequestDTO request)
-    {
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody AggiornaAnagraficaRequestDTO request) {
 
-        return clienteService.aggiornaAnagrafica(idCliente, request);
+        String email = ottieniEmailDaToken(authHeader);
+        return clienteService.aggiornaAnagrafica(email, request);
     }
 
-    @PostMapping("/{idCliente}/preferiti/{idFilm}")
+    @PostMapping("/me/preferiti/{idFilm}")
     public ClienteProfileResponseDTO aggiungiPreferito(
-            @PathVariable Long idCliente,
-            @PathVariable Long idFilm)
-    {
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long idFilm) {
 
-        return clienteService.aggiungiFilmPreferito(idCliente, idFilm);
+        String email = ottieniEmailDaToken(authHeader);
+        return clienteService.aggiungiFilmPreferito(email, idFilm);
     }
 
-    @DeleteMapping("/{idCliente}/preferiti/{idFilm}")
+    @DeleteMapping("/me/preferiti/{idFilm}")
     public ClienteProfileResponseDTO rimuoviPreferito(
-            @PathVariable Long idCliente,
-            @PathVariable Long idFilm)
-    {
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long idFilm) {
 
-        return clienteService.rimuoviFilmPreferito(idCliente, idFilm);
+        String email = ottieniEmailDaToken(authHeader);
+        return clienteService.rimuoviFilmPreferito(email, idFilm);
     }
 
-    @GetMapping("/{idCliente}/preferiti")
-    public List<FilmResponseDTO> visualizzaDettaglioPreferiti(@PathVariable Long idCliente)
-    {
-        return clienteService.ottieniDettaglioFilmPreferiti(idCliente);
+    @GetMapping("/me/preferiti")
+    public List<FilmResponseDTO> visualizzaDettaglioPreferiti(
+            @RequestHeader("Authorization") String authHeader) {
+
+        String email = ottieniEmailDaToken(authHeader);
+        return clienteService.ottieniDettaglioFilmPreferiti(email);
     }
 
 }

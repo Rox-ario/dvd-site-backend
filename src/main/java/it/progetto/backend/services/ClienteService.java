@@ -24,9 +24,9 @@ public class ClienteService
     private final FilmService filmService;
     //private final EmailService emailService;
 
-    public ClienteProfileResponseDTO ottieniProfilo(Long idCliente)
+    public ClienteProfileResponseDTO ottieniProfilo(String emailCliente)
     {
-        Cliente cliente = clienteRepository.findById(idCliente)
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato nel sistema."));
 
         ClienteProfileResponseDTO dto = new ClienteProfileResponseDTO();
@@ -49,13 +49,11 @@ public class ClienteService
         return dto;
     }
 
-    //TODO: Metodi di modifica e aggiornamento
-
     @Transactional
-    public ClienteProfileResponseDTO aggiornaAnagrafica(Long idCliente, AggiornaAnagraficaRequestDTO dto)
+    public ClienteProfileResponseDTO aggiornaAnagrafica(String emailCliente, AggiornaAnagraficaRequestDTO dto)
     {
-        Cliente cliente = clienteRepository.findById(idCliente)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato nel sistema."));
 
         if (dto.getNome() != null && !dto.getNome().trim().isEmpty()) {
             cliente.setNome(dto.getNome());
@@ -65,13 +63,13 @@ public class ClienteService
         }
         clienteRepository.save(cliente);
         //emailService.inviaNotificaAggiornamento(cliente.getEmail(), cliente.getNome());
-        return ottieniProfilo(idCliente);
+        return ottieniProfilo(emailCliente);
     }
 
     @Transactional
-    public ClienteProfileResponseDTO aggiungiFilmPreferito(Long idCliente, Long idFilm)
+    public ClienteProfileResponseDTO aggiungiFilmPreferito(String emailCliente, Long idFilm)
     {
-        Cliente cliente = clienteRepository.findById(idCliente)
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
 
         Film film = filmRepository.findById(idFilm)
@@ -90,14 +88,14 @@ public class ClienteService
         clienteRepository.save(cliente);
 
         //restituisco il profilo già aggiornato
-        return ottieniProfilo(idCliente);
+        return ottieniProfilo(emailCliente);
     }
 
     @Transactional
-    public ClienteProfileResponseDTO rimuoviFilmPreferito(Long idCliente, Long idFilm)
+    public ClienteProfileResponseDTO rimuoviFilmPreferito(String emailCliente, Long idFilm)
     {
-        Cliente cliente = clienteRepository.findById(idCliente)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato nel sistema."));
 
         Film film = filmRepository.findById(idFilm)
                 .orElseThrow(() -> new RuntimeException("Film non trovato con ID: " + idFilm));
@@ -109,14 +107,14 @@ public class ClienteService
         cliente.getFilmPreferiti().remove(film);
         clienteRepository.save(cliente);
 
-        return ottieniProfilo(idCliente);
+        return ottieniProfilo(emailCliente);
     }
 
     @Transactional(readOnly = true)
-    public List<FilmResponseDTO> ottieniDettaglioFilmPreferiti(Long idCliente)
+    public List<FilmResponseDTO> ottieniDettaglioFilmPreferiti(String emailCliente)
     {
-        Cliente cliente = clienteRepository.findById(idCliente)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato nel sistema."));
 
         return cliente.getFilmPreferiti().stream()
                 .map(filmService::convertiInDTO)
