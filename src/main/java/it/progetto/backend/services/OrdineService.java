@@ -31,9 +31,9 @@ public class OrdineService
     }
 
     @Transactional
-    public Ordine elaboraAcquisto(CreaOrdineRequest richiesta)
+    public Ordine elaboraAcquisto(String email, CreaOrdineRequest richiesta)
     {
-        Cliente cliente = clienteRepository.findById(richiesta.getIdCliente())
+        Cliente cliente = clienteRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non riconosciuto. Impossibile procedere."));
 
         if (richiesta.getArticoli() == null || richiesta.getArticoli().isEmpty())
@@ -87,9 +87,9 @@ public class OrdineService
         return ordineRepository.save(nuovoOrdine);
     }
 
-    public List<OrdineResponseDTO> ottieniStoricoCliente(Long idCliente)
+    public List<OrdineResponseDTO> ottieniStoricoCliente(String email)
     {
-        List<Ordine> ordiniReali = ordineRepository.findByClienteIdOrderByDataAcquistoDesc(idCliente);
+        List<Ordine> ordiniReali = ordineRepository.findByClienteEmailOrderByDataAcquistoDesc(email);
         return ordiniReali.stream().map(this::convertiInDTO).toList();
     }
 

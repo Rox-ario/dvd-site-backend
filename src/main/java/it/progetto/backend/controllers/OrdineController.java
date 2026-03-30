@@ -2,6 +2,7 @@ package it.progetto.backend.controllers;
 import it.progetto.backend.DTOs.CreaOrdineRequest;
 import it.progetto.backend.DTOs.OrdineResponseDTO;
 import it.progetto.backend.entities.Ordine;
+import it.progetto.backend.security.JwtService;
 import it.progetto.backend.services.OrdineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,24 +16,27 @@ import java.util.List;
 public class OrdineController
 {
     private final OrdineService ordineService;
+    private final JwtService jwtService;
+
+    private String ottieniEmailDaToken(String authHeader) {
+        return jwtService.extractUsername(authHeader.substring(7));
+    }
 
     @PostMapping
-    public Ordine creaOrdine(@RequestBody CreaOrdineRequest request)
-    {
-        return ordineService.elaboraAcquisto(request);
+    public Ordine creaOrdine(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody CreaOrdineRequest request) {
+
+        String email = ottieniEmailDaToken(authHeader);
+        return ordineService.elaboraAcquisto(email, request);
     }
 
-    @GetMapping("/storico/{idCliente}")
-    public List<OrdineResponseDTO> ottieniStorico(@PathVariable Long idCliente)
-    {
-        return ordineService.ottieniStoricoCliente(idCliente);
-    }
+    @GetMapping("/me/storico")
+    public List<OrdineResponseDTO> ottieniMioStorico(
+            @RequestHeader("Authorization") String authHeader) {
 
-    @GetMapping
-    public List<OrdineResponseDTO> visualizzaTuttiGliOrdini(
-            @RequestParam(required = false) String stato) {
-
-        return ordineService.ottieniTuttiGliOrdini(stato);
+        String email = ottieniEmailDaToken(authHeader);
+        return ordineService.ottieniStoricoCliente(email);
     }
 
     //esempio chiamata: PATCH /api/ordini/5/stato?nuovoStato=CONSEGNATO

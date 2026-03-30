@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface OrdineRepository extends JpaRepository<Ordine, Long>
 {
-    List<Ordine> findByClienteIdOrderByDataAcquistoDesc(Long clienteId);
+    List<Ordine> findByClienteEmailOrderByDataAcquistoDesc(String cliente_email);
 
     List<Ordine> findByStato(StatoOrdine stato);
 }
