@@ -47,4 +47,10 @@ public class OrdineController
 
         return ordineService.aggiornaStatoOrdine(idOrdine, nuovoStato);
     }
+
+    @GetMapping("/admin/tutti")
+    public List<OrdineResponseDTO> ottieniTuttiGliOrdini(
+            @RequestParam(required = false) String stato) {
+        return ordineService.ottieniTuttiGliOrdini(stato);
+    }
 }
