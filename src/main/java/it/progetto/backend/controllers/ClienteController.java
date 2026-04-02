@@ -68,7 +68,6 @@ public class ClienteController {
         return clienteService.ottieniDettaglioFilmPreferiti(email);
     }
 
-    // In progetto/backend/controllers/ClienteController.java
     @GetMapping("/me/preferiti/ids")
     public List<Long> visualizzaIdPreferiti(@RequestHeader("Authorization") String authHeader) {
         String email = ottieniEmailDaToken(authHeader);
