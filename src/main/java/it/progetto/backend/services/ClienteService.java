@@ -120,4 +120,14 @@ public class ClienteService
                 .map(filmService::convertiInDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<Long> ottieniIdFilmPreferiti(String emailCliente) {
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
+
+        return cliente.getFilmPreferiti().stream()
+                .map(Film::getId) // Estrae solo l'ID. Non innesca le query Lazy su attori/generi!
+                .collect(Collectors.toList());
+    }
 }
