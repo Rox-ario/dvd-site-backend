@@ -23,7 +23,7 @@ public class OrdineController
     }
 
     @PostMapping
-    public Ordine creaOrdine(
+    public OrdineResponseDTO creaOrdine(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody CreaOrdineRequest request) {
 

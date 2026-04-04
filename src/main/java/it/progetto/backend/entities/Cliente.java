@@ -46,4 +46,7 @@ public class Cliente {
     )
     @Builder.Default
     private Set<Film> filmPreferiti = new HashSet<>();
+
+    @Column(name = "indirizzo_spedizione", nullable = false)
+    private String indirizzoSpedizione;
 }

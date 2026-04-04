@@ -9,6 +9,7 @@ import it.progetto.backend.enums.StatoOrdine;
 import it.progetto.backend.repositories.ClienteRepository;
 import it.progetto.backend.repositories.FilmRepository;
 import it.progetto.backend.repositories.OrdineRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrdineService
 {
 
@@ -24,14 +26,8 @@ public class OrdineService
     private final FilmRepository filmRepository;
     private final ClienteRepository clienteRepository;
 
-    public OrdineService(OrdineRepository ordineRepository, FilmRepository filmRepository, ClienteRepository clienteRepository) {
-        this.ordineRepository = ordineRepository;
-        this.filmRepository = filmRepository;
-        this.clienteRepository = clienteRepository;
-    }
-
     @Transactional
-    public Ordine elaboraAcquisto(String email, CreaOrdineRequest richiesta)
+    public OrdineResponseDTO elaboraAcquisto(String email, CreaOrdineRequest richiesta)
     {
         Cliente cliente = clienteRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non riconosciuto. Impossibile procedere."));
@@ -41,11 +37,17 @@ public class OrdineService
             throw new IllegalArgumentException("Il carrello è vuoto.");
         }
 
+        if (richiesta.getIndirizzoSpedizione() == null || richiesta.getIndirizzoSpedizione().isBlank())
+        {
+            throw new IllegalArgumentException("L'indirizzo di spedizione è obbligatorio per procedere.");
+        }
+
         Ordine nuovoOrdine = Ordine.builder()
                 .cliente(cliente)
                 .dataAcquisto(LocalDateTime.now())
                 .stato(StatoOrdine.IN_ELABORAZIONE)
                 .totale(BigDecimal.ZERO)
+                .indirizzoSpedizione(richiesta.getIndirizzoSpedizione())
                 .build();
 
         BigDecimal totaleScontrino = BigDecimal.ZERO;
@@ -71,6 +73,7 @@ public class OrdineService
                     .film(film)
                     .quantita(rigaDto.getQuantita())
                     .prezzoAcquisto(film.getPrezzo()) //fotografo il prezzo così non cambia
+                    .indirizzoSpedizione(richiesta.getIndirizzoSpedizione())
                     .build();
 
             nuovoOrdine.getRighe().add(rigaReale);
@@ -84,7 +87,8 @@ public class OrdineService
 
         nuovoOrdine.setTotale(totaleScontrino);
 
-        return ordineRepository.save(nuovoOrdine);
+        Ordine nuovoOrdineSalvato = ordineRepository.save(nuovoOrdine);
+        return convertiInDTO(nuovoOrdineSalvato);
     }
 
     public List<OrdineResponseDTO> ottieniStoricoCliente(String email)
@@ -143,6 +147,7 @@ public class OrdineService
             return rigaDto;
         }).toList();
 
+        dto.setIndirizzoSpedizione(ordine.getIndirizzoSpedizione());
         dto.setRighe(righeDto);
         return dto;
     }

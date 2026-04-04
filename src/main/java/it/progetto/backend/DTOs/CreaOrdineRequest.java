@@ -9,4 +9,5 @@ public class CreaOrdineRequest
 {
     private Long idCliente;
     private List<RigaOrdineDTO> articoli;
+    private String indirizzoSpedizione;
 }

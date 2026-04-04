@@ -39,4 +39,7 @@ public class Ordine
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totale;
+
+    @Column(name = "indirizzo_spedizione", nullable = false)
+    private String indirizzoSpedizione;
 }

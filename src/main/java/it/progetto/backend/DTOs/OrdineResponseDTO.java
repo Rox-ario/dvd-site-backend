@@ -13,6 +13,6 @@ public class OrdineResponseDTO
     private LocalDateTime dataAcquisto;
     private BigDecimal totale;
     private String stato;
-
+    private String indirizzoSpedizione;
     private List<RigaOrdineResponseDTO> righe;
 }
