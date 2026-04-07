@@ -45,7 +45,7 @@ public class SecurityConfig
                 .authorizeHttpRequests(auth -> auth
                         //ROTTE PUBBLICHE (Completamente aperte)
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/film/**").permitAll() // Lettura libera
+                        .requestMatchers(HttpMethod.GET, "/api/film/**", "/api/generi/**", "/api/registi/**", "/api/attori/**").permitAll() // Lettura libera
 
                         //SOLO L'ADMIN PUO' SEGUIRLE
                         .requestMatchers(HttpMethod.POST, "/api/film/**").hasRole("ADMIN")

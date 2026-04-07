@@ -31,9 +31,9 @@ public class FilmService
 
     private static final String DEFAULT_COVER_URL = "https://via.placeholder.com/300x450.png?text=Copertina+Non+Disponibile";
 
-    public List<FilmResponseDTO> ricercaAvanzata(String titolo, String nomeGenere, String nomeAttore, String nomeRegista)
+    public List<FilmResponseDTO> ricercaAvanzata(String titolo, String nomeGenere, String nomeAttore, String nomeRegista, Integer anno, BigDecimal prezzoMax)
     {
-        List<Film> filmTrovati = filmRepository.ricercaAvanzataParametrica(titolo, nomeGenere, nomeAttore, nomeRegista);
+        List<Film> filmTrovati = filmRepository.ricercaAvanzataParametrica(titolo, nomeGenere, nomeAttore, nomeRegista, anno, prezzoMax);
         return filmTrovati.stream().map(this::convertiInDTO).collect(Collectors.toList());
     }
 

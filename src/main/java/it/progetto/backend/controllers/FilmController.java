@@ -6,6 +6,7 @@ import it.progetto.backend.services.FilmService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequestMapping("/api/film")
@@ -20,10 +21,12 @@ public class FilmController {
             @RequestParam(required = false) String titolo,
             @RequestParam(required = false) String nomeGenere,
             @RequestParam(required = false) String nomeAttore,
-            @RequestParam(required = false) String nomeRegista
-    )
+            @RequestParam(required = false) String nomeRegista,
+            @RequestParam(required = false) Integer anno,
+            @RequestParam(required = false) BigDecimal prezzoMax
+            )
     {
-        return filmService.ricercaAvanzata(titolo, nomeGenere, nomeAttore, nomeRegista);
+        return filmService.ricercaAvanzata(titolo, nomeGenere, nomeAttore, nomeRegista, anno, prezzoMax);
     }
 
     @GetMapping("/{id}")

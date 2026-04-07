@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -20,12 +21,16 @@ public interface FilmRepository extends JpaRepository<Film, Long>
             "WHERE f.isAttivo = true " +
             "AND (:titolo IS NULL OR LOWER(f.titolo) LIKE LOWER(CONCAT('%', :titolo, '%'))) " +
             "AND (:nomeGenere IS NULL OR LOWER(g.nome) = LOWER(:nomeGenere)) " +
-            "AND (:nomeAttore IS NULL OR LOWER(a.nome) = LOWER(:nomeAttore)) " +
-            "AND (:nomeRegista IS NULL OR LOWER(r.nome) = LOWER(:nomeRegista))")
+            "AND (:nomeAttore IS NULL OR LOWER(CONCAT(a.nome, ' ', a.cognome)) = LOWER(:nomeAttore)) " +
+            "AND (:nomeRegista IS NULL OR LOWER(CONCAT(r.nome, ' ', r.cognome)) = LOWER(:nomeRegista)) " +
+            "AND (:anno IS NULL OR f.anno = :anno) " +
+            "AND (:prezzoMax IS NULL OR f.prezzo <= :prezzoMax)")
     List<Film> ricercaAvanzataParametrica(
             @Param("titolo") String titolo,
             @Param("nomeGenere") String nomeGenere,
             @Param("nomeAttore") String nomeAttore,
-            @Param("nomeRegista") String nomeRegista
+            @Param("nomeRegista") String nomeRegista,
+            @Param("anno") Integer anno,
+            @Param("prezzoMax") BigDecimal prezzoMax
     );
 }
