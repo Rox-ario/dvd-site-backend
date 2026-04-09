@@ -20,7 +20,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception
     {
-        String emailAdmin = "chprsr03h28d086a@studenti.unical.it";
+        String emailAdmin = "rox.student26@gmail.com";
 
         if (clienteRepository.findByEmail(emailAdmin).isEmpty()) {
 

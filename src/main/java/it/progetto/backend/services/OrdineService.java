@@ -25,6 +25,7 @@ public class OrdineService
     private final OrdineRepository ordineRepository;
     private final FilmRepository filmRepository;
     private final ClienteRepository clienteRepository;
+    private final EmailService emailService;
 
     @Transactional
     public OrdineResponseDTO elaboraAcquisto(String email, CreaOrdineRequest richiesta)
@@ -117,14 +118,33 @@ public class OrdineService
         return ordini.stream().map(this::convertiInDTO).toList();
     }
 
+    @Transactional
     public OrdineResponseDTO aggiornaStatoOrdine(Long idOrdine, String nuovoStato)
     {
         Ordine ordine = ordineRepository.findById(idOrdine)
                 .orElseThrow(() -> new IllegalArgumentException("Ordine con ID " + idOrdine + " non trovato."));
 
         try {
-            StatoOrdine statoEnum = StatoOrdine.valueOf(nuovoStato.toUpperCase());
-            ordine.setStato(statoEnum);
+            StatoOrdine nuovoStatoEnum = StatoOrdine.valueOf(nuovoStato.toUpperCase());
+            StatoOrdine vecchioStatoEnum = ordine.getStato();
+
+            if (nuovoStatoEnum == StatoOrdine.ANNULLATO && vecchioStatoEnum != StatoOrdine.ANNULLATO) {
+
+                for (RigaOrdine riga : ordine.getRighe()) {
+                    Film film = riga.getFilm();
+                    film.setStock(film.getStock() + riga.getQuantita());
+                    filmRepository.save(film);
+                }
+
+                emailService.inviaNotificaRimborso(
+                        ordine.getCliente().getEmail(),
+                        ordine.getCliente().getNome(),
+                        ordine.getId(),
+                        ordine.getTotale()
+                );
+            }
+
+            ordine.setStato(nuovoStatoEnum);
             Ordine ordineAggiornato = ordineRepository.save(ordine);
             return convertiInDTO(ordineAggiornato);
         } catch (IllegalArgumentException e) {

@@ -17,6 +17,7 @@ public class AuthService {
 
     private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder; //strumento di Spring Security
+    private final EmailService emailService;
 
     @Transactional
     public String registraCliente(RegistrazioneRequestDTO dto)
@@ -37,6 +38,7 @@ public class AuthService {
                         .build();
 
         clienteRepository.save(nuovoCliente);
+        emailService.inviaNotificaRegistrazione(nuovoCliente.getEmail(), nuovoCliente.getNome());
 
         return "Registrazione completata con successo. Ora puoi effettuare il login.";
     }

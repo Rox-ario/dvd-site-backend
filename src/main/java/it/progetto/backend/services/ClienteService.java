@@ -22,7 +22,7 @@ public class ClienteService
     private final ClienteRepository clienteRepository;
     private final FilmRepository filmRepository;
     private final FilmService filmService;
-    //private final EmailService emailService;
+    private final EmailService emailService;
 
     public ClienteProfileResponseDTO ottieniProfilo(String emailCliente)
     {
@@ -43,7 +43,6 @@ public class ClienteService
             dto.setFilmPreferiti(titoliPreferiti);
         } else {
             dto.setFilmPreferiti(Collections.emptySet());
-            //TODO: il frontend deve mostrare "nessun film preferito, aggiungi alla lista!"
         }
 
         return dto;
@@ -62,7 +61,7 @@ public class ClienteService
             cliente.setCognome(dto.getCognome());
         }
         clienteRepository.save(cliente);
-        //emailService.inviaNotificaAggiornamento(cliente.getEmail(), cliente.getNome());
+        emailService.inviaNotificaAggiornamento(cliente.getEmail(), cliente.getNome());
         return ottieniProfilo(emailCliente);
     }
 

@@ -52,6 +52,7 @@ public class SecurityConfig
                         .requestMatchers(HttpMethod.PUT, "/api/film/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/film/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/ordini/admin/tutti").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/ordini/**").hasRole("ADMIN")
 
                         /*REGOLA DI DEFAULT (Tutto il resto)
                         Se una richiesta non è caduta nelle reti precedenti, richiede un login base*/
