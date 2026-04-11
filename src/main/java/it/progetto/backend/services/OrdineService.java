@@ -172,5 +172,36 @@ public class OrdineService
         return dto;
     }
 
+    @Transactional
+    public OrdineResponseDTO annullaMioOrdine(String emailCliente, Long idOrdine)
+    {
+        Ordine ordine = ordineRepository.findById(idOrdine)
+                .orElseThrow(() -> new IllegalArgumentException("Ordine non trovato."));
 
+        if (!ordine.getCliente().getEmail().equals(emailCliente)) {
+            throw new IllegalStateException("Non sei autorizzato a modificare questo ordine.");
+        }
+
+        if (ordine.getStato() != StatoOrdine.IN_ELABORAZIONE) {
+            throw new IllegalStateException("Impossibile annullare l'ordine: è già stato spedito o elaborato. Contatta l'assistenza per un reso.");
+        }
+
+        for (RigaOrdine riga : ordine.getRighe()) {
+            Film film = riga.getFilm();
+            film.setStock(film.getStock() + riga.getQuantita());
+            filmRepository.save(film);
+        }
+
+        ordine.setStato(StatoOrdine.ANNULLATO);
+        Ordine ordineAnnullato = ordineRepository.save(ordine);
+
+        emailService.inviaNotificaRimborso(
+                ordine.getCliente().getEmail(),
+                ordine.getCliente().getNome(),
+                ordine.getId(),
+                ordine.getTotale()
+        );
+
+        return convertiInDTO(ordineAnnullato);
+    }
 }

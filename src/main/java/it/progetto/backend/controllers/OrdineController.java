@@ -53,4 +53,13 @@ public class OrdineController
             @RequestParam(required = false) String stato) {
         return ordineService.ottieniTuttiGliOrdini(stato);
     }
+
+    @PostMapping("/me/{idOrdine}/annulla")
+    public OrdineResponseDTO annullaMioOrdine(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long idOrdine) {
+
+        String email = ottieniEmailDaToken(authHeader);
+        return ordineService.annullaMioOrdine(email, idOrdine);
+    }
 }

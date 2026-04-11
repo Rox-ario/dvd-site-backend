@@ -21,7 +21,7 @@ public class EmailService
             messaggio.setTo(emailDestinatario);
             messaggio.setSubject("Aggiornamento Profilo - DVD Store");
             messaggio.setText("Ciao " + nomeUtente + ",\nI dati del tuo profilo sono stati aggiornati con successo.");
-            messaggio.setFrom("chprsr03h28d086a@studenti.unical.it");
+            messaggio.setFrom("rox.student26@gmail.com");
 
             mailSender.send(messaggio);
         } catch (Exception e) {
@@ -40,7 +40,7 @@ public class EmailService
                     "Abbiamo emesso un rimborso di €" + totaleRimborsato + " a tuo favore.\n\n" +
                     "Il riaccredito avverrà sul metodo di pagamento utilizzato entro 3-5 giorni lavorativi.\n\n" +
                     "A presto,\nIl team di DVD Store.");
-            messaggio.setFrom("chprsr03h28d086a@studenti.unical.it");
+            messaggio.setFrom("rox.student26@gmail.com");
 
             mailSender.send(messaggio);
             System.out.println("Email di rimborso inviata con successo a: " + emailDestinatario);
@@ -61,7 +61,7 @@ public class EmailService
                     "Ora puoi esplorare il nostro vasto catalogo di film, creare la tua lista dei preferiti e approfittare di offerte esclusive riservate ai nostri clienti.\n\n" +
                     "Se hai bisogno di assistenza o hai domande, non esitare a contattare il nostro servizio clienti. Siamo qui per aiutarti!\n\n" +
                     "Buona visione,\nIl team di DVD Store.");
-            messaggio.setFrom("chprsr03h28d086a@studenti.unical.it");
+            messaggio.setFrom("rox.student26@gmail.com");
 
             mailSender.send(messaggio);
             System.out.println("Email di benvenuto inviata con successo a: " + emailDestinatario);

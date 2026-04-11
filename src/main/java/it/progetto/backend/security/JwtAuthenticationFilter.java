@@ -27,33 +27,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
     {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String userEmail;
+        String userEmail = null;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        //taglio via i primi 7 caratteri "Bearer "
         jwt = authHeader.substring(7);
 
-        userEmail = jwtService.extractUsername(jwt);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Sessione scaduta. Effettua nuovamente il login.\"}");
+            return;
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Token non valido o corrotto.\"}");
+            return;
+        }
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
-
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        // Passiamo la palla al prossimo filtro nella catena
+
         filterChain.doFilter(request, response);
     }
 }
