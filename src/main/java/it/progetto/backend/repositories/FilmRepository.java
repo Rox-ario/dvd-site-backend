@@ -1,6 +1,8 @@
 package it.progetto.backend.repositories;
 
 import it.progetto.backend.entities.Film;
+import it.progetto.backend.entities.Genere;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface FilmRepository extends JpaRepository<Film, Long>
@@ -33,4 +36,7 @@ public interface FilmRepository extends JpaRepository<Film, Long>
             @Param("anno") Integer anno,
             @Param("prezzoMax") BigDecimal prezzoMax
     );
+
+    @Query("SELECT DISTINCT f FROM Film f JOIN f.generi g WHERE g IN :generi AND f.id <> :filmId AND f.isAttivo = true")
+    List<Film> trovaFilmSimiliPerGeneri(@Param("generi") Set<Genere> generi, @Param("filmId") Long filmId, Pageable pageable);
 }

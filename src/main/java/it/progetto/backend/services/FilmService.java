@@ -11,10 +11,12 @@ import it.progetto.backend.repositories.FilmRepository;
 import it.progetto.backend.repositories.GenereRepository;
 import it.progetto.backend.repositories.RegistaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -198,6 +200,23 @@ public class FilmService
         {
             film.setUrlImmagine(urlFornito.trim());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<FilmResponseDTO> ottieniFilmSimili(Long id) {
+        Film filmPrincipale = filmRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Film non trovato."));
+
+        Set<Genere> generiDelFilm = filmPrincipale.getGeneri();
+
+        if (generiDelFilm == null || generiDelFilm.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        //PageRequest.of(0, 5) applica il limite SQL (LIMIT 5) direttamente al database
+        List<Film> filmSimili = filmRepository.trovaFilmSimiliPerGeneri(generiDelFilm, id, PageRequest.of(0, 5));
+
+        return filmSimili.stream().map(this::convertiInDTO).collect(Collectors.toList());
     }
 }
 

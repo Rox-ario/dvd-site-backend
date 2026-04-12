@@ -50,4 +50,10 @@ public class FilmController {
     {
         filmService.eliminaFilm(id);
     }
+
+    @GetMapping("/{id}/simili")
+    public List<FilmResponseDTO> ottieniFilmSimili(@PathVariable Long id)
+    {
+        return filmService.ottieniFilmSimili(id);
+    }
 }
