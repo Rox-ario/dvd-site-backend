@@ -146,6 +146,25 @@ public class OrdineService
 
             ordine.setStato(nuovoStatoEnum);
             Ordine ordineAggiornato = ordineRepository.save(ordine);
+
+            if(nuovoStatoEnum == StatoOrdine.SPEDITO)
+            {
+                emailService.inviaNotificaSpedizione(
+                        ordine.getCliente().getEmail(),
+                        ordine.getCliente().getNome(),
+                        ordine.getId(),
+                        ordine.getIndirizzoSpedizione()
+                );
+            }
+            if(nuovoStatoEnum == StatoOrdine.CONSEGNATO)
+            {
+                emailService.inviaNotificaConsegna(
+                        ordine.getCliente().getEmail(),
+                        ordine.getCliente().getNome(),
+                        ordine.getId(),
+                        ordine.getIndirizzoSpedizione()
+                );
+            }
             return convertiInDTO(ordineAggiornato);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Stato inesistente. Valori ammessi: IN_ELABORAZIONE, SPEDITO, CONSEGNATO, ANNULLATO");
