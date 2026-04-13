@@ -2,20 +2,16 @@ package it.progetto.backend.services;
 
 import it.progetto.backend.DTOs.CreaFilmRequestDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
-import it.progetto.backend.entities.Attore;
-import it.progetto.backend.entities.Film;
-import it.progetto.backend.entities.Genere;
-import it.progetto.backend.entities.Regista;
-import it.progetto.backend.repositories.AttoreRepository;
-import it.progetto.backend.repositories.FilmRepository;
-import it.progetto.backend.repositories.GenereRepository;
-import it.progetto.backend.repositories.RegistaRepository;
+import it.progetto.backend.DTOs.RecensioneResponseDTO;
+import it.progetto.backend.entities.*;
+import it.progetto.backend.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +26,9 @@ public class FilmService
     private final AttoreRepository attoreRepository;
     private final GenereRepository genereRepository;
     private final RegistaRepository registaRepository;
+    private final OrdineRepository ordineRepository;
+    private final RecensioneRepository recensioneRepository;
+    private final ClienteRepository clienteRepository;
 
     private static final String DEFAULT_COVER_URL = "https://via.placeholder.com/300x450.png?text=Copertina+Non+Disponibile";
 
@@ -39,11 +38,31 @@ public class FilmService
         return filmTrovati.stream().map(this::convertiInDTO).collect(Collectors.toList());
     }
 
-    public FilmResponseDTO ottieniFilmPerId(Long id)
+    public FilmResponseDTO ottieniFilmPerId(Long id, String emailUtente)
     {
         Film film = filmRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Film non trovato con ID: " + id));
-        return convertiInDTO(film);
+
+        FilmResponseDTO dto = convertiInDTO(film);
+
+        // Di default è false. Verifichiamo se possiamo abilitarlo.
+        dto.setPuoRecensire(false);
+
+        if (emailUtente != null) {
+            // 1. Verifichiamo se il cliente ha comprato il film e se gli è stato consegnato
+            boolean haRicevutoIlFilm = ordineRepository.hasClienteAcquistatoFilm(emailUtente, id);
+
+            // 2. Verifichiamo che non abbia GIA' lasciato una recensione
+            boolean haGiaRecensito = film.getRecensioni().stream()
+                    .anyMatch(r -> r.getCliente().getEmail().equals(emailUtente));
+
+            // Può recensire solo se lo ha ricevuto e non lo ha mai recensito
+            if (haRicevutoIlFilm && !haGiaRecensito) {
+                dto.setPuoRecensire(true);
+            }
+        }
+
+        return dto;
     }
 
     @Transactional
@@ -187,6 +206,25 @@ public class FilmService
                     .map(a -> a.getNome() + " " + a.getCognome())
                     .collect(Collectors.toList()));
         }
+
+        List<Recensione> recensioni = film.getRecensioni();
+        if (recensioni != null && !recensioni.isEmpty())
+        {
+            dto.setRecensioni(recensioni.stream()
+                    .map(r -> {
+                        RecensioneResponseDTO recDTO = new RecensioneResponseDTO();
+                        recDTO.setNomeCliente(r.getCliente().getNome());
+                        recDTO.setStelle(r.getStelle());
+                        recDTO.setCommento(r.getCommento());
+                        recDTO.setData(r.getDataCreazione());
+                        return recDTO;
+                    })
+                    .collect(Collectors.toList()));
+        }
+        else
+        {
+            dto.setRecensioni(Collections.emptyList());
+        }
         return dto;
     }
 
@@ -217,6 +255,31 @@ public class FilmService
         List<Film> filmSimili = filmRepository.trovaFilmSimiliPerGeneri(generiDelFilm, id, PageRequest.of(0, 5));
 
         return filmSimili.stream().map(this::convertiInDTO).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public RecensioneResponseDTO aggiungiRecensione(Long idFilm, String emailCliente, int stelle, String commento) {
+        Film film = filmRepository.findById(idFilm)
+                .orElseThrow(() -> new RuntimeException("Film non trovato"));
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
+                .orElseThrow(() -> new RuntimeException("Cliente non trovato"));
+
+        Recensione nuova = Recensione.builder()
+                .stelle(stelle)
+                .commento(commento)
+                .film(film)
+                .cliente(cliente)
+                .dataCreazione(LocalDateTime.now())
+                .build();
+
+        recensioneRepository.save(nuova);
+
+        RecensioneResponseDTO dto = new RecensioneResponseDTO();
+        dto.setNomeCliente(cliente.getNome());
+        dto.setStelle(nuova.getStelle());
+        dto.setCommento(nuova.getCommento());
+        dto.setData(nuova.getDataCreazione());
+        return dto;
     }
 }
 

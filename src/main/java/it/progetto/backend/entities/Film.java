@@ -3,7 +3,9 @@ package it.progetto.backend.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -66,4 +68,8 @@ public class Film
     private Set<Regista> registi = new HashSet<>();
 
     private String urlImmagine;
+
+    @OneToMany(mappedBy = "film", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Recensione> recensioni = new ArrayList<>();
 }
