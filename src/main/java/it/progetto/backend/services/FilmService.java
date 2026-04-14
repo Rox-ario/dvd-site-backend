@@ -6,6 +6,7 @@ import it.progetto.backend.DTOs.RecensioneResponseDTO;
 import it.progetto.backend.entities.*;
 import it.progetto.backend.repositories.*;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -211,14 +212,7 @@ public class FilmService
         if (recensioni != null && !recensioni.isEmpty())
         {
             dto.setRecensioni(recensioni.stream()
-                    .map(r -> {
-                        RecensioneResponseDTO recDTO = new RecensioneResponseDTO();
-                        recDTO.setNomeCliente(r.getCliente().getNome());
-                        recDTO.setStelle(r.getStelle());
-                        recDTO.setCommento(r.getCommento());
-                        recDTO.setData(r.getDataCreazione());
-                        return recDTO;
-                    })
+                    .map(this::getRecensioneResponseDTO)
                     .collect(Collectors.toList()));
         }
         else
@@ -273,13 +267,39 @@ public class FilmService
                 .build();
 
         recensioneRepository.save(nuova);
+        return getRecensioneResponseDTO(nuova);
+    }
 
+    @Transactional
+    public RecensioneResponseDTO modificaRecensione(Long idRecensione, String emailCliente, int stelle, String commento) {
+        Recensione recensione = recensioneRepository.findById(idRecensione)
+                .orElseThrow(() -> new RuntimeException("Recensione non trovata."));
+
+        if (!recensione.getCliente().getEmail().equals(emailCliente)) {
+            throw new RuntimeException("Non sei autorizzato a modificare questa recensione.");
+        }
+
+        recensione.setStelle(stelle);
+        recensione.setCommento(commento);
+
+        return getRecensioneResponseDTO(recensione);
+    }
+
+    @NonNull
+    private RecensioneResponseDTO getRecensioneResponseDTO(Recensione recensione) {
         RecensioneResponseDTO dto = new RecensioneResponseDTO();
-        dto.setNomeCliente(cliente.getNome());
-        dto.setStelle(nuova.getStelle());
-        dto.setCommento(nuova.getCommento());
-        dto.setData(nuova.getDataCreazione());
+        dto.setId(recensione.getId());
+        dto.setEmailCliente(recensione.getCliente().getEmail());
+        dto.setNomeCliente(recensione.getCliente().getNome());
+        dto.setStelle(recensione.getStelle());
+        dto.setCommento(recensione.getCommento());
+        dto.setData(recensione.getDataCreazione());
         return dto;
+    }
+
+    @Transactional
+    public void eliminaRecensione(Long idRecensione) {
+        recensioneRepository.deleteById(idRecensione);
     }
 }
 

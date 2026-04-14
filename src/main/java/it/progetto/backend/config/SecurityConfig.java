@@ -49,8 +49,10 @@ public class SecurityConfig
                         .requestMatchers(HttpMethod.GET, "/api/film/**", "/api/generi/**", "/api/registi/**", "/api/attori/**").permitAll() // Lettura libera
 
                         .requestMatchers(HttpMethod.POST, "/api/film/*/recensioni").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.PUT, "/api/recensioni/**").hasRole("CLIENTE")
 
                         //SOLO L'ADMIN PUO' SEGUIRLE
+                        .requestMatchers(HttpMethod.DELETE, "/api/recensioni/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/film/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/film/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/film/**").hasRole("ADMIN")
