@@ -26,7 +26,11 @@ public class RecensioneController {
     }
 
     @DeleteMapping("/{id}")
-    public void eliminaRecensione(@PathVariable Long id) {
-        filmService.eliminaRecensione(id);
+    public void eliminaRecensione(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        String email = jwtService.extractUsername(authHeader.substring(7));
+        filmService.eliminaRecensione(id, email);
     }
 }

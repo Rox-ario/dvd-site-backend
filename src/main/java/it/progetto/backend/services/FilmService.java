@@ -8,6 +8,8 @@ import it.progetto.backend.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -298,8 +300,22 @@ public class FilmService
     }
 
     @Transactional
-    public void eliminaRecensione(Long idRecensione) {
-        recensioneRepository.deleteById(idRecensione);
+    public void eliminaRecensione(Long idRecensione, String emailRichiedente)
+    {
+        Recensione recensione = recensioneRepository.findById(idRecensione)
+                .orElseThrow(() -> new RuntimeException("Impossibile eliminare: recensione non trovata."));
+
+        //Controllo se l'utente loggato ha il ruolo di amministratore
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        //Se non è admin e l'email non coincide con quella del creatore, blocchiamo l'operazione
+        if (!isAdmin && !recensione.getCliente().getEmail().equals(emailRichiedente)) {
+            throw new RuntimeException("Azione non consentita: puoi eliminare solo le tue recensioni.");
+        }
+
+        recensioneRepository.delete(recensione);
     }
 }
 
