@@ -72,4 +72,7 @@ public class Film
     @OneToMany(mappedBy = "film", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Recensione> recensioni = new ArrayList<>();
+
+    @OneToMany(mappedBy = "film", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FunFact> curiosita = new ArrayList<>();
 }

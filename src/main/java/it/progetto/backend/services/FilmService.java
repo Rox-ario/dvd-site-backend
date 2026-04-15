@@ -2,6 +2,7 @@ package it.progetto.backend.services;
 
 import it.progetto.backend.DTOs.CreaFilmRequestDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
+import it.progetto.backend.DTOs.FunFactDTO;
 import it.progetto.backend.DTOs.RecensioneResponseDTO;
 import it.progetto.backend.entities.*;
 import it.progetto.backend.repositories.*;
@@ -118,6 +119,17 @@ public class FilmService
                         .collect(Collectors.toSet())
                 : new HashSet<>());
 
+        if (request.getCuriosita() != null && !request.getCuriosita().isEmpty()) {
+            List<FunFact> facts = request.getCuriosita().stream()
+                    .map(testo -> {
+                        FunFact f = new FunFact();
+                        f.setTesto(testo);
+                        f.setFilm(nuovoFilm);
+                        return f;
+                    }).collect(Collectors.toList());
+            nuovoFilm.setCuriosita(facts);
+        }
+
         return convertiInDTO(filmRepository.save(nuovoFilm));
     }
 
@@ -163,6 +175,18 @@ public class FilmService
                                 .orElseThrow(() -> new RuntimeException("Impossibile creare il film: Regista con ID " + idRegista + " non trovato!")))
                         .collect(Collectors.toSet())
                 : new HashSet<>());
+
+        filmEsistente.getCuriosita().clear();
+        if (request.getCuriosita() != null && !request.getCuriosita().isEmpty()) {
+            List<FunFact> facts = request.getCuriosita().stream()
+                    .map(testo -> {
+                        FunFact f = new FunFact();
+                        f.setTesto(testo);
+                        f.setFilm(filmEsistente);
+                        return f;
+                    }).toList();
+            filmEsistente.getCuriosita().addAll(facts);
+        }
 
         return convertiInDTO(filmRepository.save(filmEsistente));
     }
@@ -220,6 +244,13 @@ public class FilmService
         else
         {
             dto.setRecensioni(Collections.emptyList());
+        }
+        if (film.getCuriosita() != null && !film.getCuriosita().isEmpty()) {
+            dto.setCuriosita(film.getCuriosita().stream()
+                    .map(FunFact::getTesto)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setCuriosita(Collections.emptyList());
         }
         return dto;
     }
@@ -316,6 +347,20 @@ public class FilmService
         }
 
         recensioneRepository.delete(recensione);
+    }
+
+    @Transactional
+    public void aggiungiFunFact(Long id, FunFactDTO funFact) {
+        Film film = filmRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Film non trovato."));
+
+        FunFact nuovo = new FunFact();
+        nuovo.setTesto(funFact.getTesto());
+        nuovo.setFilm(film);
+
+        film.getCuriosita().add(nuovo);
+
+        filmRepository.save(film);
     }
 }
 

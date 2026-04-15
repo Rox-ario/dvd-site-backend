@@ -2,6 +2,7 @@ package it.progetto.backend.controllers;
 
 import it.progetto.backend.DTOs.CreaFilmRequestDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
+import it.progetto.backend.DTOs.FunFactDTO;
 import it.progetto.backend.DTOs.RecensioneResponseDTO;
 import it.progetto.backend.entities.Recensione;
 import it.progetto.backend.security.JwtService;
@@ -81,5 +82,10 @@ public class FilmController {
     public List<FilmResponseDTO> ottieniFilmSimili(@PathVariable Long id)
     {
         return filmService.ottieniFilmSimili(id);
+    }
+
+    @PostMapping("/{id}/curiosita")
+    public void aggiungiFunFact(@PathVariable Long id, @RequestBody FunFactDTO funFact) {
+        filmService.aggiungiFunFact(id, funFact);
     }
 }

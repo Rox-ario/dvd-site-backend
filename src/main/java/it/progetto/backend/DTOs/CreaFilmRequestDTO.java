@@ -18,4 +18,5 @@ public class CreaFilmRequestDTO
     private Integer durataMinuti;
     private Integer stock;
     private String urlImmagine;
+    private List<String> curiosita;
 }

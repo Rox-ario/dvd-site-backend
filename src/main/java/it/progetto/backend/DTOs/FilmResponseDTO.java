@@ -22,4 +22,5 @@ public class FilmResponseDTO
     private String urlImmagine;
     private boolean puoRecensire;
     private List<RecensioneResponseDTO> recensioni;
+    private List<String> curiosita;
 }
