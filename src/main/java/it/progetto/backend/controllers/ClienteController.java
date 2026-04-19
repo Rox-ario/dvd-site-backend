@@ -1,6 +1,7 @@
 package it.progetto.backend.controllers;
 
 import it.progetto.backend.DTOs.AggiornaAnagraficaRequestDTO;
+import it.progetto.backend.DTOs.CambiaPasswordRequestDTO;
 import it.progetto.backend.DTOs.ClienteProfileResponseDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
 import it.progetto.backend.security.JwtService;
@@ -72,6 +73,17 @@ public class ClienteController {
     public List<Long> visualizzaIdPreferiti(@RequestHeader("Authorization") String authHeader) {
         String email = ottieniEmailDaToken(authHeader);
         return clienteService.ottieniIdFilmPreferiti(email);
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<String> modificaPassword(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody CambiaPasswordRequestDTO request) {
+
+        String email = ottieniEmailDaToken(authHeader);
+        clienteService.cambiaPassword(email, request);
+
+        return ResponseEntity.ok("Password aggiornata con successo.");
     }
 
 }

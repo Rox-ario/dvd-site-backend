@@ -1,5 +1,6 @@
 package it.progetto.backend.services;
 import it.progetto.backend.DTOs.AggiornaAnagraficaRequestDTO;
+import it.progetto.backend.DTOs.CambiaPasswordRequestDTO;
 import it.progetto.backend.DTOs.ClienteProfileResponseDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
 import it.progetto.backend.entities.Cliente;
@@ -7,6 +8,7 @@ import it.progetto.backend.entities.Film;
 import it.progetto.backend.repositories.ClienteRepository;
 import it.progetto.backend.repositories.FilmRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class ClienteService
     private final FilmRepository filmRepository;
     private final FilmService filmService;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     public ClienteProfileResponseDTO ottieniProfilo(String emailCliente)
     {
@@ -60,9 +63,13 @@ public class ClienteService
         if (dto.getCognome() != null && !dto.getCognome().trim().isEmpty()) {
             cliente.setCognome(dto.getCognome());
         }
+        if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty() && dto.getEmail().matches("^[a-zA-Z0-9._%+-]{1,64}@gmail\\.com$"))
+        {
+            cliente.setEmail(dto.getEmail());
+        }
         clienteRepository.save(cliente);
         emailService.inviaNotificaAggiornamento(cliente.getEmail(), cliente.getNome());
-        return ottieniProfilo(emailCliente);
+        return ottieniProfilo(cliente.getEmail());
     }
 
     @Transactional
@@ -128,5 +135,28 @@ public class ClienteService
         return cliente.getFilmPreferiti().stream()
                 .map(Film::getId) // Estrae solo l'ID. Non innesca le query Lazy su attori/generi!
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void cambiaPassword(String emailCliente, CambiaPasswordRequestDTO dto) {
+        Cliente cliente = clienteRepository.findByEmail(emailCliente)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
+
+        if (!passwordEncoder.matches(dto.getVecchiaPassword(), cliente.getPassword())) {
+            throw new IllegalArgumentException("La vecchia password inserita non è corretta.");
+        }
+
+        if (!dto.getNuovaPassword().equals(dto.getConfermaNuovaPassword())) {
+            throw new IllegalArgumentException("La nuova password e la conferma non coincidono.");
+        }
+
+        if (dto.getNuovaPassword().length() < 8) {
+            throw new IllegalArgumentException("La nuova password deve contenere almeno 8 caratteri.");
+        }
+
+        cliente.setPassword(passwordEncoder.encode(dto.getNuovaPassword()));
+        clienteRepository.save(cliente);
+
+        emailService.inviaNotificaCambioPassword(cliente.getEmail(), cliente.getNome());
     }
 }

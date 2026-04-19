@@ -20,7 +20,9 @@ public class EmailService
             SimpleMailMessage messaggio = new SimpleMailMessage();
             messaggio.setTo(emailDestinatario);
             messaggio.setSubject("Aggiornamento Profilo - DVD Store");
-            messaggio.setText("Ciao " + nomeUtente + ",\nI dati del tuo profilo sono stati aggiornati con successo.");
+            messaggio.setText("Ciao " + nomeUtente + ",\nI dati del tuo profilo sono stati aggiornati con successo.\n" +
+                    "Se non hai effettuato questa modifica, contatta immediatamente il nostro servizio clienti.\n\n" +
+                    "A presto,\nIl team di DVD Store.");
             messaggio.setFrom("rox.student26@gmail.com");
 
             mailSender.send(messaggio);
@@ -109,6 +111,27 @@ public class EmailService
             System.out.println("Email di consegna inviata con successo a: " + emailDestinatario);
         } catch (Exception e) {
             System.err.println("Errore logico di rete: Impossibile inviare l'email di consegna a " + emailDestinatario+ "\n" + e.getMessage());
+        }
+    }
+
+    @Async
+    public void inviaNotificaCambioPassword(String email, String nome)
+    {
+        try {
+            SimpleMailMessage messaggio = new SimpleMailMessage();
+            messaggio.setTo(email);
+            messaggio.setSubject("Conferma Cambio Password utente " + nome);
+            messaggio.setText("Ciao " + nome + ",\n\n" +
+                    "Ti confermiamo che la password del tuo account è stata modificata con successo.\n" +
+                    "Se non hai effettuato questa modifica, contatta immediatamente il nostro servizio clienti per proteggere il tuo account.\n\n" +
+                    "A presto,\nIl team di DVD Store.");
+            messaggio.setFrom("rox.student26@gmail.com");
+
+            mailSender.send(messaggio);
+            System.out.println("Email di cambio password inviata con successo a: " + email);
+        }catch (Exception e)
+        {
+            System.err.println("Errore logivo di rete: Impossibile inviare l'email di cambio password a " + email+ "\n" + e.getMessage());
         }
     }
 }

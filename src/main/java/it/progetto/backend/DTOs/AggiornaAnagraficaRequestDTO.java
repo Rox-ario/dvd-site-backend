@@ -7,4 +7,5 @@ public class AggiornaAnagraficaRequestDTO
 {
     private String nome;
     private String cognome;
+    private String email;
 }
