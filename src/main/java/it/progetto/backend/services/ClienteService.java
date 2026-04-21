@@ -36,7 +36,6 @@ public class ClienteService
         dto.setNome(cliente.getNome());
         dto.setCognome(cliente.getCognome());
         dto.setEmail(cliente.getEmail());
-        dto.setPuntiFedeltà(cliente.getPuntiFedelta());
         dto.setRuolo(cliente.getRuolo().name());
         if (cliente.getFilmPreferiti() != null && !cliente.getFilmPreferiti().isEmpty())
         {
@@ -133,7 +132,7 @@ public class ClienteService
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
 
         return cliente.getFilmPreferiti().stream()
-                .map(Film::getId) // Estrae solo l'ID. Non innesca le query Lazy su attori/generi!
+                .map(Film::getId)
                 .collect(Collectors.toList());
     }
 

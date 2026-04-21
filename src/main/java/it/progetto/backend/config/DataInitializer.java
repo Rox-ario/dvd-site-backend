@@ -33,7 +33,6 @@ public class DataInitializer implements CommandLineRunner {
 
             admin.setPassword(passwordEncoder.encode("admin123"));
 
-            admin.setPuntiFedelta(0);
             admin.setFilmPreferiti(new HashSet<>());
 
             admin.setRuolo(Ruolo.ADMIN);

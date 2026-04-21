@@ -37,7 +37,6 @@ public class AuthService {
                         .cognome(dto.getCognome())
                         .email(dto.getEmail())
                         .password(passwordEncoder.encode(dto.getPassword()))
-                        .puntiFedelta(0)
                         .filmPreferiti(new HashSet<>())
                         .ruolo(Ruolo.CLIENTE)
                         .build();

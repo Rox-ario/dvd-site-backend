@@ -34,10 +34,6 @@ public class Cliente {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "punti_fedelta", nullable = false)
-    @Builder.Default
-    private Integer puntiFedelta = 0;
-
     @ManyToMany
     @JoinTable(
             name = "film_preferiti",
