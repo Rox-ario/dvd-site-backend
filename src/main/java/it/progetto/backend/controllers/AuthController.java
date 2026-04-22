@@ -1,8 +1,6 @@
 package it.progetto.backend.controllers;
 
-import it.progetto.backend.DTOs.AuthResponseDTO;
-import it.progetto.backend.DTOs.LoginRequestDTO;
-import it.progetto.backend.DTOs.RegistrazioneRequestDTO;
+import it.progetto.backend.DTOs.*;
 import it.progetto.backend.entities.Cliente;
 import it.progetto.backend.repositories.ClienteRepository;
 import it.progetto.backend.security.JwtService;
