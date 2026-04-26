@@ -1,6 +1,5 @@
 package it.progetto.backend.entities;
 
-import it.progetto.backend.enums.Ruolo;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,14 +24,8 @@ public class Cliente {
     @Column(nullable = false)
     private String cognome;
 
-    @Enumerated(EnumType.STRING)
-    private Ruolo ruolo;
-
     @Column(nullable = false, unique = true)
     private String email;
-
-    @Column(nullable = false)
-    private String password;
 
     @ManyToMany
     @JoinTable(

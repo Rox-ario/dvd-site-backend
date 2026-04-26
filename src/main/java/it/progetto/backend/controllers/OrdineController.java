@@ -1,11 +1,12 @@
 package it.progetto.backend.controllers;
+import com.nimbusds.jwt.JWT;
 import it.progetto.backend.DTOs.CreaOrdineRequest;
 import it.progetto.backend.DTOs.OrdineResponseDTO;
-import it.progetto.backend.entities.Ordine;
-import it.progetto.backend.security.JwtService;
+import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.OrdineService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,26 +17,24 @@ import java.util.List;
 public class OrdineController
 {
     private final OrdineService ordineService;
-    private final JwtService jwtService;
-
-    private String ottieniEmailDaToken(String authHeader) {
-        return jwtService.extractUsername(authHeader.substring(7));
-    }
+    private final ClienteService clienteService;
 
     @PostMapping
     public OrdineResponseDTO creaOrdine(
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody CreaOrdineRequest request) {
 
-        String email = ottieniEmailDaToken(authHeader);
+        // Assicura che l'utente esista nel DB locale
+        clienteService.sincronizzaClienteDaToken(jwt);
+        String email = jwt.getClaimAsString("email");
         return ordineService.elaboraAcquisto(email, request);
     }
 
     @GetMapping("/me/storico")
-    public List<OrdineResponseDTO> ottieniMioStorico(
-            @RequestHeader("Authorization") String authHeader) {
-
-        String email = ottieniEmailDaToken(authHeader);
+    public List<OrdineResponseDTO> ottieniMioStorico(@AuthenticationPrincipal Jwt jwt)
+    {
+        clienteService.sincronizzaClienteDaToken(jwt);
+        String email = jwt.getClaimAsString("email");
         return ordineService.ottieniStoricoCliente(email);
     }
 
@@ -50,16 +49,18 @@ public class OrdineController
 
     @GetMapping("/admin/tutti")
     public List<OrdineResponseDTO> ottieniTuttiGliOrdini(
-            @RequestParam(required = false) String stato) {
+            @RequestParam(required = false) String stato,
+            @AuthenticationPrincipal Jwt jwt) {
+        clienteService.sincronizzaClienteDaToken(jwt);
         return ordineService.ottieniTuttiGliOrdini(stato);
     }
 
     @PostMapping("/me/{idOrdine}/annulla")
     public OrdineResponseDTO annullaMioOrdine(
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long idOrdine) {
 
-        String email = ottieniEmailDaToken(authHeader);
+        String email = jwt.getClaimAsString("email");
         return ordineService.annullaMioOrdine(email, idOrdine);
     }
 }

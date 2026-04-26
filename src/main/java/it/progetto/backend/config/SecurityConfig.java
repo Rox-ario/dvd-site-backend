@@ -1,37 +1,29 @@
 package it.progetto.backend.config;
 
-import lombok.RequiredArgsConstructor;
-import it.progetto.backend.security.JwtAuthenticationFilter;
-import it.progetto.backend.services.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
-@RequiredArgsConstructor
-public class SecurityConfig
-{
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserDetailsServiceImpl userDetailsService;
+@EnableWebSecurity
+public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
-    {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
@@ -44,48 +36,50 @@ public class SecurityConfig
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        //ROTTE PUBBLICHE (Completamente aperte)
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/film/**", "/api/generi/**", "/api/registi/**", "/api/attori/**").permitAll() // Lettura libera
 
-                        .requestMatchers(HttpMethod.POST, "/api/film/*/recensioni").hasRole("CLIENTE")
-                        .requestMatchers(HttpMethod.PUT, "/api/recensioni/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/film/**", "/api/generi/**", "/api/registi/**", "/api/attori/**").permitAll()
 
-                        //SOLO L'ADMIN PUO' SEGUIRLE
-                        .requestMatchers(HttpMethod.DELETE, "/api/recensioni/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/film/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/film/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/film/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/ordini/admin/tutti").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/ordini/**").hasRole("ADMIN")
 
-                        /*REGOLA DI DEFAULT (Tutto il resto)
-                        Se una richiesta non è caduta nelle reti precedenti, richiede un login base*/
+                        .requestMatchers(HttpMethod.POST, "/api/film/*/recensioni").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.PUT, "/api/recensioni/**").hasAuthority("CLIENTE")
+
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/recensioni/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/film/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/film/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/film/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/ordini/admin/tutti").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/ordini/**").hasAuthority("ADMIN")
+
+
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(Customizer.withDefaults());
+
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
+                );
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider()
-    {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
+    public JwtAuthenticationConverter jwtAuthConverter() {
+        JwtGrantedAuthoritiesConverter defaultGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+            Collection<GrantedAuthority> authorities = defaultGrantedAuthoritiesConverter.convert(jwt);
+
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            if (realmAccess != null && realmAccess.containsKey("roles")) {
+                @SuppressWarnings("unchecked")
+                Collection<String> roles = (Collection<String>) realmAccess.get("roles");
+
+                roles.forEach(role -> authorities.add(new SimpleGrantedAuthority(role.toUpperCase())));
+            }
+            return authorities;
+        });
+        return converter;
     }
 }

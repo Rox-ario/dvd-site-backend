@@ -1,6 +1,5 @@
 package it.progetto.backend.services;
 import it.progetto.backend.DTOs.AggiornaAnagraficaRequestDTO;
-import it.progetto.backend.DTOs.CambiaPasswordRequestDTO;
 import it.progetto.backend.DTOs.ClienteProfileResponseDTO;
 import it.progetto.backend.DTOs.FilmResponseDTO;
 import it.progetto.backend.entities.Cliente;
@@ -8,7 +7,7 @@ import it.progetto.backend.entities.Film;
 import it.progetto.backend.repositories.ClienteRepository;
 import it.progetto.backend.repositories.FilmRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,6 @@ public class ClienteService
     private final FilmRepository filmRepository;
     private final FilmService filmService;
     private final EmailService emailService;
-    private final PasswordEncoder passwordEncoder;
 
     public ClienteProfileResponseDTO ottieniProfilo(String emailCliente)
     {
@@ -36,7 +34,6 @@ public class ClienteService
         dto.setNome(cliente.getNome());
         dto.setCognome(cliente.getCognome());
         dto.setEmail(cliente.getEmail());
-        dto.setRuolo(cliente.getRuolo().name());
         if (cliente.getFilmPreferiti() != null && !cliente.getFilmPreferiti().isEmpty())
         {
             Set<String> titoliPreferiti = cliente.getFilmPreferiti().stream()
@@ -137,25 +134,17 @@ public class ClienteService
     }
 
     @Transactional
-    public void cambiaPassword(String emailCliente, CambiaPasswordRequestDTO dto) {
-        Cliente cliente = clienteRepository.findByEmail(emailCliente)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato."));
+    public void sincronizzaClienteDaToken(Jwt jwt) {
+        String email = jwt.getClaimAsString("email");
 
-        if (!passwordEncoder.matches(dto.getVecchiaPassword(), cliente.getPassword())) {
-            throw new IllegalArgumentException("La vecchia password inserita non è corretta.");
-        }
+        clienteRepository.findByEmail(email).orElseGet(() -> {
+            //Se l'utente non esiste nel DB, lo creo
+            Cliente nuovoCliente = new Cliente();
+            nuovoCliente.setEmail(email);
+            nuovoCliente.setNome(jwt.getClaimAsString("given_name") != null ? jwt.getClaimAsString("given_name") : "Utente");
+            nuovoCliente.setCognome(jwt.getClaimAsString("family_name") != null ? jwt.getClaimAsString("family_name") : "Sconosciuto");
 
-        if (!dto.getNuovaPassword().equals(dto.getConfermaNuovaPassword())) {
-            throw new IllegalArgumentException("La nuova password e la conferma non coincidono.");
-        }
-
-        if (dto.getNuovaPassword().length() < 8) {
-            throw new IllegalArgumentException("La nuova password deve contenere almeno 8 caratteri.");
-        }
-
-        cliente.setPassword(passwordEncoder.encode(dto.getNuovaPassword()));
-        clienteRepository.save(cliente);
-
-        emailService.inviaNotificaCambioPassword(cliente.getEmail(), cliente.getNome());
+            return clienteRepository.save(nuovoCliente);
+        });
     }
 }

@@ -2,9 +2,11 @@ package it.progetto.backend.controllers;
 
 import it.progetto.backend.DTOs.RecensioneResponseDTO;
 import it.progetto.backend.entities.Recensione;
-import it.progetto.backend.security.JwtService;
+import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.FilmService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,24 +15,28 @@ import org.springframework.web.bind.annotation.*;
 public class RecensioneController {
 
     private final FilmService filmService;
-    private final JwtService jwtService;
+    private final ClienteService clienteService;
 
     @PutMapping("/{id}")
     public RecensioneResponseDTO modificaRecensione(
             @PathVariable Long id,
             @RequestBody Recensione request,
-            @RequestHeader("Authorization") String authHeader) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        String email = jwtService.extractUsername(authHeader.substring(7));
+        // Sincronizza il cliente nel DB se accede per la prima volta
+        clienteService.sincronizzaClienteDaToken(jwt);
+        String email = jwt.getClaimAsString("email");
         return filmService.modificaRecensione(id, email, request.getStelle(), request.getCommento());
     }
 
     @DeleteMapping("/{id}")
     public void eliminaRecensione(
             @PathVariable Long id,
-            @RequestHeader("Authorization") String authHeader) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        String email = jwtService.extractUsername(authHeader.substring(7));
+        // Sincronizza il cliente nel DB se accede per la prima volta
+        clienteService.sincronizzaClienteDaToken(jwt);
+        String email = jwt.getClaimAsString("email");
         filmService.eliminaRecensione(id, email);
     }
 }

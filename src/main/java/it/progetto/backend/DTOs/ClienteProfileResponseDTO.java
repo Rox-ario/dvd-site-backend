@@ -12,5 +12,4 @@ public class ClienteProfileResponseDTO
     private String cognome;
     private String email;
     private Set<String> filmPreferiti;
-    private String ruolo;
 }

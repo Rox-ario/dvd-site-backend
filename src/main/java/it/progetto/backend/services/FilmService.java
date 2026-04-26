@@ -53,14 +53,11 @@ public class FilmService
         dto.setPuoRecensire(false);
 
         if (emailUtente != null) {
-            // 1. Verifichiamo se il cliente ha comprato il film e se gli è stato consegnato
             boolean haRicevutoIlFilm = ordineRepository.hasClienteAcquistatoFilm(emailUtente, id);
 
-            // 2. Verifichiamo che non abbia GIA' lasciato una recensione
             boolean haGiaRecensito = film.getRecensioni().stream()
                     .anyMatch(r -> r.getCliente().getEmail().equals(emailUtente));
 
-            // Può recensire solo se lo ha ricevuto e non lo ha mai recensito
             if (haRicevutoIlFilm && !haGiaRecensito) {
                 dto.setPuoRecensire(true);
             }
@@ -314,6 +311,7 @@ public class FilmService
 
         recensione.setStelle(stelle);
         recensione.setCommento(commento);
+        recensioneRepository.save(recensione);
 
         return getRecensioneResponseDTO(recensione);
     }

@@ -5,12 +5,15 @@ import it.progetto.backend.DTOs.FilmResponseDTO;
 import it.progetto.backend.DTOs.FunFactDTO;
 import it.progetto.backend.DTOs.RecensioneResponseDTO;
 import it.progetto.backend.entities.Recensione;
-import it.progetto.backend.security.JwtService;
+import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.FilmService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.List;
 
 @RequestMapping("/api/film")
@@ -19,7 +22,7 @@ import java.util.List;
 public class FilmController {
 
     private final FilmService filmService;
-    private final JwtService jwtService;
+    private final ClienteService clienteService;
 
     @GetMapping
     public List<FilmResponseDTO> esploraCatalogo(
@@ -37,17 +40,14 @@ public class FilmController {
     @GetMapping("/{id}")
     public FilmResponseDTO ottieniDettaglioFilm(
             @PathVariable Long id,
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @AuthenticationPrincipal Jwt jwt) {
 
         String emailUtente = null;
-        // Se c'è il token, cerchiamo di capire chi è l'utente
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                emailUtente = jwtService.extractUsername(authHeader.substring(7));
+        try {
+                emailUtente = jwt.getClaimAsString("email");
             } catch (Exception e) {
                 // Se il token è scaduto o invalido, lo trattiamo semplicemente come un utente non loggato
             }
-        }
 
         return filmService.ottieniFilmPerId(id, emailUtente);
     }
@@ -55,10 +55,12 @@ public class FilmController {
     @PostMapping("/{id}/recensioni")
     public RecensioneResponseDTO scriviRecensione(
             @PathVariable Long id,
-            @RequestBody Recensione request, // Puoi usare un DTO dedicato qui
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Recensione request,
+            @AuthenticationPrincipal Jwt jwt) throws ParseException {
 
-        String email = jwtService.extractUsername(authHeader.substring(7));
+        // Sincronizza il cliente nel DB se accede per la prima volta
+        clienteService.sincronizzaClienteDaToken(jwt);
+        String email = jwt.getClaimAsString("email");
         return filmService.aggiungiRecensione(id, email, request.getStelle(), request.getCommento());
     }
 
