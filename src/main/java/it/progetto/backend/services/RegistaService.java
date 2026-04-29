@@ -6,6 +6,8 @@ import it.progetto.backend.repositories.RegistaRepository;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,13 +36,13 @@ public class RegistaService
         return convertiInDTO(registaRepository.save(regista));
     }
 
-    public List<RegistaDTO> ottieniTutti() {
-        return registaRepository.findAll().stream().map(this::convertiInDTO).toList();
+    public Page<RegistaDTO> ottieniTutti(Pageable pageable) {
+        return registaRepository.findAll(pageable).map(this::convertiInDTO);
     }
 
-    public List<RegistaDTO> ricercaRegisti(String query) {
-        return registaRepository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(query, query)
-                .stream().map(this::convertiInDTO).toList();
+    public Page<RegistaDTO> ricercaRegisti(String query, Pageable pageable) {
+        return registaRepository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(query, query, pageable)
+                .map(this::convertiInDTO);
     }
 
     @Transactional

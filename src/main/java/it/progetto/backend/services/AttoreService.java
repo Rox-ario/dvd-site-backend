@@ -2,19 +2,17 @@ package it.progetto.backend.services;
 import it.progetto.backend.DTOs.AttoreDTO;
 import it.progetto.backend.DTOs.CreaAttoreRequest;
 import it.progetto.backend.entities.Attore;
-import it.progetto.backend.entities.Genere;
 import it.progetto.backend.repositories.AttoreRepository;
-import it.progetto.backend.repositories.GenereRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 //ha un ruolo di ricerca o creazione dell'entity Attore
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AttoreService
 {
     private final AttoreRepository attoreRepository;
@@ -37,12 +35,10 @@ public class AttoreService
         return convertiInDTO(attoreRepository.save(nuovoAttore));
     }
 
-    public List<AttoreDTO> ottieniTuttiGliAttori()
+    public Page<AttoreDTO> ottieniTuttiGliAttori(Pageable pageable)
     {
-        return attoreRepository.findAll()
-                .stream()
-                .map(this::convertiInDTO)
-                .toList();
+        return attoreRepository.findAll(pageable)
+                .map(this::convertiInDTO);
     }
 
     @Transactional
@@ -57,12 +53,11 @@ public class AttoreService
         return convertiInDTO(attoreRepository.save(attore));
     }
 
-    public List<AttoreDTO> ricercaAttori(String query)
+    public Page<AttoreDTO> ricercaAttori(String query, Pageable pageable)
     {
-        return attoreRepository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(query, query)
-                .stream()
-                .map(this::convertiInDTO)
-                .collect(Collectors.toList());
+        return attoreRepository
+                .findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(query, query, pageable)
+                .map(this::convertiInDTO);
     }
 
     private AttoreDTO convertiInDTO(Attore attore)

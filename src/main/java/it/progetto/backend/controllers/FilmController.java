@@ -8,6 +8,9 @@ import it.progetto.backend.entities.Recensione;
 import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.FilmService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -25,16 +28,17 @@ public class FilmController {
     private final ClienteService clienteService;
 
     @GetMapping
-    public List<FilmResponseDTO> esploraCatalogo(
+    public Page<FilmResponseDTO> esploraCatalogo(
             @RequestParam(required = false) String titolo,
             @RequestParam(required = false) String nomeGenere,
             @RequestParam(required = false) String nomeAttore,
             @RequestParam(required = false) String nomeRegista,
             @RequestParam(required = false) Integer anno,
-            @RequestParam(required = false) BigDecimal prezzoMax
+            @RequestParam(required = false) BigDecimal prezzoMax,
+            @PageableDefault(size = 10) Pageable pageable
             )
     {
-        return filmService.ricercaAvanzata(titolo, nomeGenere, nomeAttore, nomeRegista, anno, prezzoMax);
+        return filmService.ricercaAvanzata(titolo, nomeGenere, nomeAttore, nomeRegista, anno, prezzoMax, pageable);
     }
 
     @GetMapping("/{id}")

@@ -4,6 +4,9 @@ import it.progetto.backend.DTOs.CreaRegistaRequest;
 import it.progetto.backend.DTOs.RegistaDTO;
 import it.progetto.backend.services.RegistaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,11 +19,12 @@ public class RegistaController
     private final RegistaService registaService;
 
     @GetMapping
-    public List<RegistaDTO> esploraRegisti(@RequestParam(required = false, name = "q") String query) {
+    public Page<RegistaDTO> esploraRegisti(@RequestParam(required = false, name = "q") String query,
+                                           @PageableDefault(size = 10) Pageable pageable){
         if (query != null && !query.trim().isEmpty()) {
-            return registaService.ricercaRegisti(query.trim());
+            return registaService.ricercaRegisti(query.trim(), pageable);
         }
-        return registaService.ottieniTutti();
+        return registaService.ottieniTutti(pageable);
     }
 
     @PostMapping

@@ -8,7 +8,9 @@ import it.progetto.backend.entities.*;
 import it.progetto.backend.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -36,10 +38,10 @@ public class FilmService
 
     private static final String DEFAULT_COVER_URL = "https://via.placeholder.com/300x450.png?text=Copertina+Non+Disponibile";
 
-    public List<FilmResponseDTO> ricercaAvanzata(String titolo, String nomeGenere, String nomeAttore, String nomeRegista, Integer anno, BigDecimal prezzoMax)
+    public Page<FilmResponseDTO> ricercaAvanzata(String titolo, String nomeGenere, String nomeAttore, String nomeRegista, Integer anno, BigDecimal prezzoMax, Pageable pageable)
     {
-        List<Film> filmTrovati = filmRepository.ricercaAvanzataParametrica(titolo, nomeGenere, nomeAttore, nomeRegista, anno, prezzoMax);
-        return filmTrovati.stream().map(this::convertiInDTO).collect(Collectors.toList());
+        Page<Film> filmTrovati = filmRepository.ricercaAvanzataParametrica(titolo, nomeGenere, nomeAttore, nomeRegista, anno, prezzoMax, pageable);
+        return filmTrovati.map(this::convertiInDTO);
     }
 
     public FilmResponseDTO ottieniFilmPerId(Long id, String emailUtente)
@@ -49,7 +51,7 @@ public class FilmService
 
         FilmResponseDTO dto = convertiInDTO(film);
 
-        // Di default è false. Verifichiamo se possiamo abilitarlo.
+        //Di default è false. Verifichiamo se possiamo abilitarlo.
         dto.setPuoRecensire(false);
 
         if (emailUtente != null) {
@@ -230,18 +232,6 @@ public class FilmService
                     .map(a -> a.getNome() + " " + a.getCognome())
                     .collect(Collectors.toList()));
         }
-
-        List<Recensione> recensioni = film.getRecensioni();
-        if (recensioni != null && !recensioni.isEmpty())
-        {
-            dto.setRecensioni(recensioni.stream()
-                    .map(this::getRecensioneResponseDTO)
-                    .collect(Collectors.toList()));
-        }
-        else
-        {
-            dto.setRecensioni(Collections.emptyList());
-        }
         if (film.getCuriosita() != null && !film.getCuriosita().isEmpty()) {
             dto.setCuriosita(film.getCuriosita().stream()
                     .map(FunFact::getTesto)
@@ -287,6 +277,16 @@ public class FilmService
                 .orElseThrow(() -> new RuntimeException("Film non trovato"));
         Cliente cliente = clienteRepository.findByEmail(emailCliente)
                 .orElseThrow(() -> new RuntimeException("Cliente non trovato"));
+
+        boolean haRicevutoIlFilm = ordineRepository.hasClienteAcquistatoFilm(emailCliente, idFilm);
+        if (!haRicevutoIlFilm) {
+            throw new RuntimeException("Azione non consentita: devi aver acquistato e ricevuto il film per poterlo recensire.");
+        }
+
+        boolean haGiaRecensito = recensioneRepository.existsByFilmIdAndClienteEmail(idFilm, emailCliente);
+        if (haGiaRecensito) {
+            throw new RuntimeException("Hai già recensito questo film.");
+        }
 
         Recensione nuova = Recensione.builder()
                 .stelle(stelle)
@@ -359,6 +359,18 @@ public class FilmService
         film.getCuriosita().add(nuovo);
 
         filmRepository.save(film);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RecensioneResponseDTO> getRecensioni(Long idFilm, Pageable pageable)
+    {
+        if (!filmRepository.existsById(idFilm)) {
+            throw new RuntimeException("Film non trovato.");
+        }
+
+        Page<Recensione> recensioniPage = recensioneRepository.findByFilmIdOrderByDataCreazioneDesc(idFilm, pageable);
+
+        return recensioniPage.map(this::getRecensioneResponseDTO);
     }
 }
 

@@ -5,6 +5,8 @@ import it.progetto.backend.entities.Genere;
 import it.progetto.backend.repositories.GenereRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,13 +33,13 @@ public class GenereService
         return convertiInDTO(genereRepository.save(genere));
     }
 
-    public List<GenereDTO> ottieniTutti() {
-        return genereRepository.findAll().stream().map(this::convertiInDTO).toList();
+    public Page<GenereDTO> ottieniTutti(Pageable pageable)
+    {
+        return genereRepository.findAll(pageable).map(this::convertiInDTO);
     }
 
-    public List<GenereDTO> ricercaGeneri(String query) {
-        return genereRepository.findByNomeContainingIgnoreCase(query)
-                .stream().map(this::convertiInDTO).toList();
+    public Page<GenereDTO> ricercaGeneri(String query, Pageable pageable) {
+        return genereRepository.findByNomeContainingIgnoreCase(query, pageable).map(this::convertiInDTO);
     }
 
     @Transactional

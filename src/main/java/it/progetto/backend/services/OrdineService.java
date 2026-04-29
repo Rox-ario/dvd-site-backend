@@ -10,6 +10,8 @@ import it.progetto.backend.repositories.ClienteRepository;
 import it.progetto.backend.repositories.FilmRepository;
 import it.progetto.backend.repositories.OrdineRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,30 +94,30 @@ public class OrdineService
         return convertiInDTO(nuovoOrdineSalvato);
     }
 
-    public List<OrdineResponseDTO> ottieniStoricoCliente(String email)
+    public Page<OrdineResponseDTO> ottieniStoricoCliente(String email, Pageable pageable)
     {
-        List<Ordine> ordiniReali = ordineRepository.findByClienteEmailOrderByDataAcquistoDesc(email);
-        return ordiniReali.stream().map(this::convertiInDTO).toList();
+        Page<Ordine> ordiniReali = ordineRepository.findByClienteEmailOrderByDataAcquistoDesc(email, pageable);
+        return ordiniReali.map(this::convertiInDTO);
     }
 
-    public List<OrdineResponseDTO> ottieniTuttiGliOrdini(String stato)
+    public Page<OrdineResponseDTO> ottieniTuttiGliOrdini(String stato, Pageable pageable)
     {
-        List<Ordine> ordini;
+        Page<Ordine> ordini;
 
         if (stato != null && !stato.isBlank()) {
             try {
                 //Tenta la conversione sicura della stringa nell'Enum
                 StatoOrdine statoEnum = StatoOrdine.valueOf(stato.toUpperCase());
-                ordini = ordineRepository.findByStato(statoEnum);
+                ordini = ordineRepository.findByStato(statoEnum, pageable);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Stato ordine non valido: " + stato);
             }
         } else {
             //Se non passo nessuno stato, li recupero tutti
-            ordini = ordineRepository.findAll();
+            ordini = ordineRepository.findAll(pageable);
         }
 
-        return ordini.stream().map(this::convertiInDTO).toList();
+        return ordini.map(this::convertiInDTO);
     }
 
     @Transactional

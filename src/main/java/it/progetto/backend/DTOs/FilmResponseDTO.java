@@ -21,6 +21,5 @@ public class FilmResponseDTO
     private boolean isAttivo; // per dire al cliente se sia in vendita ancora o meno
     private String urlImmagine;
     private boolean puoRecensire;
-    private List<RecensioneResponseDTO> recensioni;
     private List<String> curiosita;
 }

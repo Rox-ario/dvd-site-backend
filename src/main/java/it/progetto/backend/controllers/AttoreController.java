@@ -4,6 +4,9 @@ import it.progetto.backend.DTOs.AttoreDTO;
 import it.progetto.backend.DTOs.CreaAttoreRequest;
 import it.progetto.backend.services.AttoreService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,13 +19,14 @@ public class AttoreController
     private final AttoreService attoreService;
 
     @GetMapping
-    public List<AttoreDTO> esploraAttori(@RequestParam(required = false, name = "q") String query)
+    public Page<AttoreDTO> esploraAttori(@RequestParam(required = false, name = "q") String query,
+                                         @PageableDefault(size = 10) Pageable pageable)
     {
         if (query != null && !query.trim().isEmpty())
         {
-            return attoreService.ricercaAttori(query.trim());
+            return attoreService.ricercaAttori(query.trim(), pageable);
         }
-        return attoreService.ottieniTuttiGliAttori();
+        return attoreService.ottieniTuttiGliAttori(pageable);
     }
 
     @PostMapping

@@ -5,6 +5,9 @@ import it.progetto.backend.entities.Recensione;
 import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.FilmService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -38,5 +41,12 @@ public class RecensioneController {
         clienteService.sincronizzaClienteDaToken(jwt);
         String email = jwt.getClaimAsString("email");
         filmService.eliminaRecensione(id, email);
+    }
+    @GetMapping("/{id}")
+    public Page<RecensioneResponseDTO> ottieniRecensioniPaginato(
+            @PathVariable Long id,
+            @PageableDefault(page = 0, size = 5) Pageable pageable)
+    {
+        return filmService.getRecensioni(id, pageable);
     }
 }
