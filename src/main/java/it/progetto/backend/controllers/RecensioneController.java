@@ -1,6 +1,7 @@
 package it.progetto.backend.controllers;
 
 import it.progetto.backend.DTOs.RecensioneResponseDTO;
+import it.progetto.backend.DTOs.StatisticheRecensioniDTO;
 import it.progetto.backend.entities.Recensione;
 import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.FilmService;
@@ -48,5 +49,10 @@ public class RecensioneController {
             @PageableDefault(page = 0, size = 5) Pageable pageable)
     {
         return filmService.getRecensioni(id, pageable);
+    }
+
+    @GetMapping("/film/{id}/statistiche")
+    public StatisticheRecensioniDTO ottieniStatistiche(@PathVariable Long id) {
+        return filmService.ottieniStatisticheRecensioni(id);
     }
 }

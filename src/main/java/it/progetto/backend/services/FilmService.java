@@ -1,9 +1,6 @@
 package it.progetto.backend.services;
 
-import it.progetto.backend.DTOs.CreaFilmRequestDTO;
-import it.progetto.backend.DTOs.FilmResponseDTO;
-import it.progetto.backend.DTOs.FunFactDTO;
-import it.progetto.backend.DTOs.RecensioneResponseDTO;
+import it.progetto.backend.DTOs.*;
 import it.progetto.backend.entities.*;
 import it.progetto.backend.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -371,6 +365,34 @@ public class FilmService
         Page<Recensione> recensioniPage = recensioneRepository.findByFilmIdOrderByDataCreazioneDesc(idFilm, pageable);
 
         return recensioniPage.map(this::getRecensioneResponseDTO);
+    }
+
+    public StatisticheRecensioniDTO ottieniStatisticheRecensioni(Long idFilm)
+    {
+        Map<Integer, Long> dist = new HashMap<>();
+        // Inizializzo la mappa a 0 per tutte le stelle da 1 a 5
+        for(int i = 1; i <= 5; i++) {
+            dist.put(i, 0L);
+        }
+
+        List<Object[]> results = recensioneRepository.countDistribuzioneStelle(idFilm);
+        long totale = 0;
+        double somma = 0;
+
+        for (Object[] row : results) {
+            Integer stelle = (Integer) row[0];
+            Long count = (Long) row[1];
+            dist.put(stelle, count);
+            totale += count;
+            somma += (stelle * count);
+        }
+
+        StatisticheRecensioniDTO dto = new StatisticheRecensioniDTO();
+        dto.setDistribuzione(dist);
+        dto.setTotaleRecensioni((int) totale);
+        dto.setMediaStelle(totale > 0 ? (somma / (double) totale) : 0.0);
+
+        return dto;
     }
 }
 
