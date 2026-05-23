@@ -6,6 +6,7 @@ import it.progetto.backend.services.OrdineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -54,7 +55,8 @@ public class OrdineController
     public Page<OrdineResponseDTO> ottieniTuttiGliOrdini(
             @RequestParam(required = false) String stato,
             @AuthenticationPrincipal Jwt jwt,
-            @PageableDefault(size = 10) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "dataAcquisto", direction = Sort.Direction.DESC) Pageable pageable) {
+
         clienteService.sincronizzaClienteDaToken(jwt);
         return ordineService.ottieniTuttiGliOrdini(stato, pageable);
     }

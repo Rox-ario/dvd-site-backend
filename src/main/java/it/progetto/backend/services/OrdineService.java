@@ -12,8 +12,11 @@ import it.progetto.backend.repositories.OrdineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -82,7 +85,15 @@ public class OrdineService
             nuovoOrdine.getRighe().add(rigaReale);
 
             film.setStock(film.getStock() - rigaDto.getQuantita());
-            filmRepository.save(film);
+            //Optimistic Lock
+            try {
+                filmRepository.saveAndFlush(film);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Spiacenti! L'ultima copia di '" + film.getTitolo() + "' è stata appena acquistata da un altro utente."
+                );
+            }
 
             BigDecimal costoParziale = rigaReale.getPrezzoAcquisto().multiply(new BigDecimal(rigaDto.getQuantita()));
             totaleScontrino = totaleScontrino.add(costoParziale);
