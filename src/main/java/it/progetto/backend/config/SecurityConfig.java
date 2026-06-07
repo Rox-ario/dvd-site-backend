@@ -39,6 +39,9 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/film/**", "/api/generi/**", "/api/registi/**", "/api/attori/**").permitAll()
 
+                        // Registrazione post-login Keycloak: richiede JWT valido ma non un ruolo specifico
+                        // (un utente appena registrato potrebbe non avere ancora il ruolo CLIENTE assegnato)
+                        .requestMatchers(HttpMethod.POST, "/api/clienti/register").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/api/film/*/recensioni").hasAuthority("CLIENTE")
                         .requestMatchers(HttpMethod.PUT, "/api/recensioni/**").hasAuthority("CLIENTE")

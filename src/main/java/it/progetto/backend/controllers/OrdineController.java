@@ -1,7 +1,6 @@
 package it.progetto.backend.controllers;
 import it.progetto.backend.DTOs.CreaOrdineRequest;
 import it.progetto.backend.DTOs.OrdineResponseDTO;
-import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.OrdineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,15 +18,12 @@ import org.springframework.web.bind.annotation.*;
 public class OrdineController
 {
     private final OrdineService ordineService;
-    private final ClienteService clienteService;
 
     @PostMapping
     public OrdineResponseDTO creaOrdine(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody CreaOrdineRequest request) {
 
-        // Assicura che l'utente esista nel DB locale
-        clienteService.sincronizzaClienteDaToken(jwt);
         String email = jwt.getClaimAsString("email");
         return ordineService.elaboraAcquisto(email, request);
     }
@@ -37,7 +33,6 @@ public class OrdineController
             @AuthenticationPrincipal Jwt jwt,
             @PageableDefault(size = 10) Pageable pageable)
     {
-        clienteService.sincronizzaClienteDaToken(jwt);
         String email = jwt.getClaimAsString("email");
         return ordineService.ottieniStoricoCliente(email, pageable);
     }
@@ -57,7 +52,6 @@ public class OrdineController
             @AuthenticationPrincipal Jwt jwt,
             @PageableDefault(size = 20, sort = "dataAcquisto", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        clienteService.sincronizzaClienteDaToken(jwt);
         return ordineService.ottieniTuttiGliOrdini(stato, pageable);
     }
 

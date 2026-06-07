@@ -5,7 +5,6 @@ import it.progetto.backend.DTOs.FilmResponseDTO;
 import it.progetto.backend.DTOs.FunFactDTO;
 import it.progetto.backend.DTOs.RecensioneResponseDTO;
 import it.progetto.backend.entities.Recensione;
-import it.progetto.backend.services.ClienteService;
 import it.progetto.backend.services.FilmService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,7 +24,6 @@ import java.util.List;
 public class FilmController {
 
     private final FilmService filmService;
-    private final ClienteService clienteService;
 
     @GetMapping
     public Page<FilmResponseDTO> esploraCatalogo(
@@ -62,8 +60,6 @@ public class FilmController {
             @RequestBody Recensione request,
             @AuthenticationPrincipal Jwt jwt) throws ParseException {
 
-        // Sincronizza il cliente nel DB se accede per la prima volta
-        clienteService.sincronizzaClienteDaToken(jwt);
         String email = jwt.getClaimAsString("email");
         return filmService.aggiungiRecensione(id, email, request.getStelle(), request.getCommento());
     }
