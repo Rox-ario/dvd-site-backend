@@ -8,7 +8,6 @@ import it.progetto.backend.entities.Film;
 import it.progetto.backend.repositories.ClienteRepository;
 import it.progetto.backend.repositories.FilmRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClienteService
@@ -136,71 +134,53 @@ public class ClienteService
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Registra un nuovo Cliente nel sistema al primo login da Keycloak.
-     * Idempotente: se il cliente esiste già restituisce il profilo senza errori.
-     * I campi nome/cognome/email vengono presi dal DTO se valorizzati,
-     * altrimenti si utilizzano i claim del JWT come fallback.
-     */
     @Transactional
     public ClienteProfileResponseDTO registraCliente(Jwt jwt, RegistrazioneClienteRequestDTO dto) {
 
-        // Log dei claim disponibili nel JWT per facilitare il debug
-        log.info("[registraCliente] Claims JWT disponibili: sub={}, email={}, preferred_username={}, given_name={}, family_name={}",
-                jwt.getSubject(),
-                jwt.getClaimAsString("email"),
-                jwt.getClaimAsString("preferred_username"),
-                jwt.getClaimAsString("given_name"),
-                jwt.getClaimAsString("family_name"));
-
-        // -- Risolvi email: DTO → claim "email" → claim "preferred_username" come fallback --
-        String email = resolvi(dto.getEmail());
+        String email = risolvi(dto.getEmail());
         if (email == null) email = jwt.getClaimAsString("email");
         if (email == null) email = jwt.getClaimAsString("preferred_username"); // fallback Keycloak
 
-        String nome = resolvi(dto.getNome());
+        String nome = risolvi(dto.getNome());
         if (nome == null) nome = jwt.getClaimAsString("given_name");
         if (nome == null) nome = "Utente";
 
-        String cognome = resolvi(dto.getCognome());
+        String cognome = risolvi(dto.getCognome());
         if (cognome == null) cognome = jwt.getClaimAsString("family_name");
         if (cognome == null) cognome = "Sconosciuto";
 
-        log.info("[registraCliente] Dati risolti — email: {}, nome: {}, cognome: {}", email, nome, cognome);
-
-        // -- Validazione anti-injection (con null check esplicito) --
         if (email == null || !email.matches("^[a-zA-Z0-9._%+\\-]{1,64}@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$")) {
-            log.error("[registraCliente] Email non valida o assente: '{}'", email);
             throw new IllegalArgumentException("Email non valida o non presente nel token.");
         }
         if (!nome.matches("^[a-zA-Z\u00C0-\u00FF' \\-]{1,100}$")) {
-            log.warn("[registraCliente] Nome non valido: '{}', uso fallback 'Utente'", nome);
+            System.out.println("[registraCliente] Nome non valido: '{"+ nome +"}', uso fallback 'Utente'");
             nome = "Utente";
         }
         if (!cognome.matches("^[a-zA-Z\u00C0-\u00FF' \\-]{1,100}$")) {
-            log.warn("[registraCliente] Cognome non valido: '{}', uso fallback 'Sconosciuto'", cognome);
+            System.out.println("[registraCliente] Cognome non valido: '{"+ cognome +"}', uso fallback 'Sconosciuto'");
             cognome = "Sconosciuto";
         }
 
-        // -- Idempotenza: se esiste già, restituisce il profilo esistente --
+        //se esiste già, restituisce il profilo esistente
         if (clienteRepository.existsByEmail(email)) {
-            log.info("[registraCliente] Cliente già esistente per email: {}", email);
+            System.out.println("[registraCliente] Cliente già esistente per email: {"+ email +"}");
             return ottieniProfilo(email);
         }
 
-        // -- Crea il nuovo cliente --
+        //altrimenti Creo il nuovo cliente --
         Cliente nuovoCliente = new Cliente();
         nuovoCliente.setEmail(email);
         nuovoCliente.setNome(nome);
         nuovoCliente.setCognome(cognome);
         clienteRepository.save(nuovoCliente);
-        log.info("[registraCliente] Nuovo cliente creato: {}", email);
+        System.out.println("[registraCliente] Nuovo cliente creato: {"+ email +"}");
 
         return ottieniProfilo(email);
     }
 
-    /** Ritorna il valore stringa se non nullo e non vuoto, altrimenti null. */
-    private static String resolvi(String valore) {
+    //Ritorna il valore stringa se non nullo e non vuoto, altrimenti null.
+    private static String risolvi(String valore)
+    {
         return (valore != null && !valore.trim().isEmpty()) ? valore.trim() : null;
     }
 }
