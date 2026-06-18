@@ -31,7 +31,6 @@ public class RigaOrdine
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal prezzoAcquisto;
-    //se metto uno sconto, il prezzo di quest'ordine non cambia se è stato già effettuato
 
     @Column(name = "indirizzo_spedizione", nullable = false)
     private String indirizzoSpedizione;

@@ -3,7 +3,7 @@ import java.util.List;
 
 import lombok.Data;
 
-@Data // Genera in automatico Getter, Setter, toString, equals e hashCode
+@Data
 public class CreaOrdineRequest
 {
     private List<RigaOrdineDTO> articoli;

@@ -167,7 +167,7 @@ public class ClienteService
             return ottieniProfilo(email);
         }
 
-        //altrimenti Creo il nuovo cliente --
+        //altrimenti Creo il nuovo cliente
         Cliente nuovoCliente = new Cliente();
         nuovoCliente.setEmail(email);
         nuovoCliente.setNome(nome);
@@ -175,6 +175,7 @@ public class ClienteService
         clienteRepository.save(nuovoCliente);
         System.out.println("[registraCliente] Nuovo cliente creato: {"+ email +"}");
 
+        emailService.inviaNotificaRegistrazione(email, nome);
         return ottieniProfilo(email);
     }
 
